@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>AI図面作成 v1</title>
+<style>
+/* ===== DESIGN TOKENS ===== */
+:root{
+  --bg:#f0f4f8;
+  --bg2:#e4ecf4;
+  --bg3:#d6e4f0;
+  --card:#ffffff;
+  --border:#b8cfe0;
+  --text:#1a2a38;
+  --text2:#3a5a72;
+  --text3:#6a8ea8;
+  --accent:#1a7abf;
+  --accent2:#0fa870;
+  --accent3:#e05a20;
+  --accent4:#8a20c0;
+  --warn:#e09000;
+  --shadow:0 2px 10px rgba(26,80,120,.12);
+  --shadow2:0 4px 20px rgba(26,80,120,.18);
+  --radius:10px;
+  --r2:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN',Meiryo,sans-serif;font-size:14px;min-height:100dvh;}
+
+/* ===== LOGIN ===== */
+#loginScreen{display:none;position:fixed;inset:0;background:linear-gradient(145deg,#0d2a42,#1a5080 60%,#0d3a20);align-items:center;justify-content:center;padding:20px;z-index:9999;}
+#loginScreen.active{display:flex;}
+.login-card{background:rgba(255,255,255,.96);border-radius:18px;padding:32px 28px;width:min(380px,100%);box-shadow:0 24px 60px rgba(0,0,0,.4);}
+.login-logo{text-align:center;margin-bottom:24px;}
+.login-logo .ico{font-size:48px;display:block;margin-bottom:10px;}
+.login-logo h1{color:#1a2a38;font-size:20px;font-weight:700;letter-spacing:1px;}
+.login-logo p{color:#6a8ea8;font-size:12px;margin-top:4px;}
+.lf{margin-bottom:14px;}
+.lf label{display:block;font-size:11px;font-weight:700;color:#3a5a72;margin-bottom:5px;letter-spacing:.5px;}
+.lf input{width:100%;padding:12px 14px;border:2px solid #b8cfe0;border-radius:8px;font-size:16px;outline:none;background:#f4f8fc;font-family:inherit;transition:border-color .2s;}
+.lf input:focus{border-color:#1a7abf;background:#fff;}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1a7abf,#0d5a90);color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;letter-spacing:1px;transition:opacity .2s;}
+.login-btn:active{opacity:.85;}
+.login-err{color:#c03020;font-size:12px;text-align:center;margin-top:10px;min-height:16px;}
+
+/* ===== APP HEADER ===== */
+.app-bar{background:linear-gradient(135deg,#0d2a42,#1a5080);color:#e8f4ff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.app-bar-title{display:flex;align-items:center;gap:8px;}
+.app-bar-title .ico{font-size:20px;}
+.app-bar-title span{font-size:15px;font-weight:700;letter-spacing:.5px;}
+.app-bar-badge{background:rgba(0,200,120,.2);color:#60ffb0;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid rgba(0,200,120,.3);}
+.bar-btns{display:flex;gap:6px;}
+.bar-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#e8f4ff;font-size:12px;padding:5px 12px;border-radius:16px;cursor:pointer;transition:all .2s;}
+.bar-btn:active{background:rgba(255,255,255,.25);}
+
+/* ===== SCREENS ===== */
+.screen{display:none;min-height:calc(100dvh - 52px);}
+.screen.active{display:block;}
+
+/* ===== HOME ===== */
+#home-screen{background:var(--bg);}
+.home-hero{background:linear-gradient(145deg,#0d2a42,#1a5080);color:#e8f4ff;padding:22px 16px 18px;text-align:center;}
+.home-hero h2{font-size:19px;font-weight:700;margin-bottom:6px;}
+.home-hero p{font-size:12px;color:#90c8f0;line-height:1.7;}
+.module-bar{background:#fff;border-bottom:2px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.module-bar-label{font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap;}
+.mod-btn{padding:6px 14px;border:2px solid var(--border);border-radius:20px;background:var(--bg2);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.mod-btn.active{border-color:var(--accent);background:#e8f4ff;color:var(--accent);}
+.mod-custom-input{padding:6px 10px;border:2px solid var(--border);border-radius:20px;background:var(--bg2);color:var(--text);font-size:12px;width:90px;outline:none;font-family:inherit;}
+.mod-custom-input:focus{border-color:var(--accent);}
+
+/* Workflow steps */
+.workflow{padding:14px;}
+.wf-step{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;border:2px solid transparent;overflow:hidden;}
+.wf-step.step-active{border-color:var(--accent);}
+.wf-head{display:flex;align-items:center;gap:10px;padding:13px 14px;background:var(--bg2);cursor:pointer;}
+.wf-num{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.wf-num.done{background:var(--accent2);}
+.wf-title{font-size:14px;font-weight:700;flex:1;}
+.wf-sub{font-size:10px;color:var(--text3);}
+.wf-body{padding:14px;display:none;}
+.wf-step.open .wf-body{display:block;}
+
+/* Floor selector */
+.floor-tabs{display:flex;gap:0;margin-bottom:14px;border-radius:8px;overflow:hidden;border:2px solid var(--border);}
+.floor-tab{flex:1;padding:10px 6px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;background:var(--bg2);color:var(--text3);transition:all .2s;border:none;}
+.floor-tab.active{background:var(--accent);color:#fff;}
+
+/* Room grid */
+.room-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
+.room-chip{background:var(--bg2);border:2px solid var(--border);border-radius:8px;padding:9px 5px;text-align:center;cursor:pointer;transition:all .2s;user-select:none;}
+.room-chip:active{transform:scale(.95);}
+.room-chip.selected{border-color:var(--accent);background:#e8f4ff;}
+.room-chip .ricon{font-size:20px;display:block;margin-bottom:3px;}
+.room-chip .rlabel{font-size:11px;font-weight:700;color:var(--text2);}
+
+/* Span selector */
+.span-sel-wrap{margin-bottom:10px;}
+.span-sel-label{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;}
+.span-btns{display:flex;flex-wrap:wrap;gap:4px;}
+.span-btn{padding:5px 10px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg2);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:'Share Tech Mono',monospace;}
+.span-btn:active,.span-btn.picked{border-color:var(--accent);background:#e8f4ff;color:var(--accent);}
+.span-custom{display:flex;gap:6px;margin-top:6px;align-items:center;}
+.span-custom input{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;font-family:'Share Tech Mono',monospace;}
+.span-custom input:focus{border-color:var(--accent);}
+.span-custom .unit{font-size:11px;color:var(--text3);}
+
+/* Floor layout list */
+.layout-list{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;}
+.layout-item{background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:8px;}
+.layout-item .li-icon{font-size:18px;}
+.layout-item .li-info{flex:1;}
+.layout-item .li-name{font-size:13px;font-weight:700;}
+.layout-item .li-dim{font-size:10px;color:var(--text3);font-family:'Share Tech Mono',monospace;margin-top:1px;}
+.layout-item .li-del{background:none;border:none;font-size:18px;color:#c8a0a0;cursor:pointer;padding:2px;}
+
+/* AI prompt area */
+.ai-prompt-wrap{background:#f0f6ff;border:1.5px solid #b0d0f0;border-radius:10px;padding:12px;margin-bottom:10px;}
+.ai-prompt-label{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:7px;display:flex;align-items:center;gap:5px;}
+.ai-prompt-ta{width:100%;background:#fff;border:1.5px solid #b0d0f0;border-radius:8px;padding:10px 12px;font-size:14px;resize:none;outline:none;min-height:70px;font-family:inherit;color:var(--text);line-height:1.6;}
+.ai-prompt-ta:focus{border-color:var(--accent);}
+.ai-prompt-actions{display:flex;gap:6px;margin-top:8px;}
+.voice-btn2{width:40px;height:40px;border:2px solid #b0d0f0;border-radius:8px;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.voice-btn2.rec{border-color:#e03030;background:#fff0f0;animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.ai-gen-btn{flex:1;padding:10px;background:linear-gradient(135deg,#1a7abf,#0d5a90);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+.ai-gen-btn:disabled{opacity:.5;}
+.ai-search-btn{flex:1;padding:10px;background:linear-gradient(135deg,#1a8a60,#0d6040);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
+
+/* Quick prompts */
+.quick-prompts{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.qp-btn{padding:5px 10px;border:1.5px solid var(--border);border-radius:14px;background:var(--card);color:var(--text2);font-size:11px;cursor:pointer;white-space:nowrap;}
+.qp-btn:active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* Generate big button */
+.gen-main-btn{width:100%;padding:16px;background:linear-gradient(135deg,#1a7abf,#0d5a90);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 16px rgba(26,90,180,.3);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.gen-main-btn:active{opacity:.85;}
+.gen-main-btn:disabled{background:#a0b8c8;box-shadow:none;}
+
+/* ===== CANVAS SCREEN ===== */
+#canvas-screen{background:var(--bg);}
+.canvas-toolbar{background:#fff;border-bottom:2px solid var(--border);padding:8px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;overflow-x:auto;}
+.tool-btn{padding:7px 12px;border:2px solid var(--border);border-radius:20px;background:var(--bg2);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.tool-btn.active{border-color:var(--accent);background:#e8f4ff;color:var(--accent);}
+.tool-btn.danger{border-color:#e0a0a0;color:#c03030;}
+.canvas-area{position:relative;overflow:hidden;touch-action:none;}
+canvas#floorCanvas{display:block;touch-action:none;}
+
+/* Floor select */
+.floor-switch{display:flex;gap:0;border-radius:20px;overflow:hidden;border:2px solid var(--border);flex-shrink:0;}
+.fs-btn{padding:5px 14px;border:none;background:var(--bg2);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer;}
+.fs-btn.active{background:var(--accent);color:#fff;}
+
+/* Props panel */
+.props-panel{background:#fff;border-top:2px solid var(--border);padding:10px 14px;}
+.props-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.props-label{font-size:11px;color:var(--text3);white-space:nowrap;}
+.props-val{font-size:13px;font-weight:700;color:var(--accent);}
+.props-input{padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);font-size:12px;width:80px;outline:none;font-family:'Share Tech Mono',monospace;}
+.props-input:focus{border-color:var(--accent);}
+.props-btn{padding:5px 12px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg2);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;}
+.props-btn:active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.props-btn.del{border-color:#e0a0a0;color:#c03030;}
+
+/* AI Chat overlay */
+.ai-chat-panel{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.4);align-items:flex-end;}
+.ai-chat-panel.open{display:flex;}
+.ai-chat-inner{background:#fff;border-radius:18px 18px 0 0;width:100%;max-height:70dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom);}
+.ai-chat-head{background:linear-gradient(135deg,#1a5080,#0d3a60);color:#e8f4ff;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:18px 18px 0 0;}
+.ai-chat-head h3{font-size:15px;font-weight:700;flex:1;}
+.ai-chat-msgs{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--bg);}
+.ai-msg2{display:flex;gap:7px;}
+.ai-msg2.user{flex-direction:row-reverse;}
+.ai-bub2{max-width:88%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.65;white-space:pre-wrap;}
+.ai-msg2.bot .ai-bub2{background:#fff;border:1px solid var(--border);border-radius:4px 14px 14px 14px;box-shadow:var(--shadow);}
+.ai-msg2.user .ai-bub2{background:linear-gradient(135deg,#1a5080,#0d3a60);color:#fff;border-radius:14px 4px 14px 14px;}
+.ai-av2{width:26px;height:26px;border-radius:50%;background:#e8f0f8;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ai-inp-row{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--border);background:#fff;}
+.ai-ta2{flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;font-size:14px;resize:none;outline:none;max-height:80px;min-height:38px;font-family:inherit;}
+.ai-ta2:focus{border-color:var(--accent);}
+.ai-send2{background:linear-gradient(135deg,#1a7abf,#0d5a90);color:#fff;border:none;border-radius:10px;width:44px;height:44px;font-size:18px;cursor:pointer;flex-shrink:0;}
+.ai-typing2{display:flex;gap:4px;padding:3px 0;}
+.ai-typing2 span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:td .9s infinite;}
+.ai-typing2 span:nth-child(2){animation-delay:.2s;}
+.ai-typing2 span:nth-child(3){animation-delay:.4s;}
+@keyframes td{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+
+/* Quick btns in chat */
+.ai-quick2{display:flex;gap:5px;flex-wrap:wrap;padding:6px 10px;background:#f4f8ff;border-bottom:1px solid #d8e8f8;}
+.aqb2{font-size:11px;font-weight:600;padding:5px 9px;border:1px solid #b0d0f0;border-radius:12px;background:#fff;color:#1a4a80;cursor:pointer;white-space:nowrap;}
+.aqb2:active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* Notification toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a3a60;color:#e8f4ff;border-radius:20px;padding:10px 20px;font-size:13px;font-weight:600;z-index:9000;transition:transform .25s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* Loading */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(10,28,46,.8);z-index:8000;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(4px);}
+.loading-overlay.active{display:flex;}
+.loading-ring{width:52px;height:52px;border:4px solid rgba(255,255,255,.15);border-top-color:#60c8ff;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:#90d8ff;font-size:14px;font-weight:600;}
+.loading-sub{color:#5090b0;font-size:12px;}
+
+/* Fab AI button */
+.fab-ai{position:fixed;bottom:20px;right:16px;z-index:400;width:54px;height:54px;border-radius:50%;border:none;background:linear-gradient(135deg,#1a5080,#2a7ab0);color:#fff;font-size:22px;box-shadow:0 4px 16px rgba(26,80,180,.4);cursor:pointer;display:none;transition:transform .15s;}
+.fab-ai:active{transform:scale(.9);}
+
+/* Summary card */
+.summary-card{background:linear-gradient(135deg,#f0f8ff,#e4f0fa);border:2px solid #90c8f0;border-radius:var(--radius);padding:12px;margin-bottom:12px;}
+.summary-title{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.summary-item{background:#fff;border-radius:6px;padding:7px 10px;}
+.summary-item .si-label{font-size:10px;color:var(--text3);margin-bottom:2px;}
+.summary-item .si-val{font-size:14px;font-weight:700;color:var(--accent);}
+
+/* Utility */
+.divider{border:none;border-top:1px dashed var(--border);margin:10px 0;}
+.label-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.tag-blue{background:#e0f0ff;color:#1a5a90;}
+.tag-green{background:#e0f8ec;color:#1a6a40;}
+.tag-orange{background:#fff0e0;color:#c06000;}
+select.field-sel{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;font-family:inherit;}
+select.field-sel:focus{border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<!-- Firebase -->
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import{getFirestore,doc,setDoc,getDoc,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const cfg={apiKey:"AIzaSyCVk2miG5TK1ffTofXLh0hHgeSbOvmIgZ8",authDomain:"kensetsu-nippo-842a2.firebaseapp.com",projectId:"kensetsu-nippo-842a2",storageBucket:"kensetsu-nippo-842a2.firebasestorage.app",messagingSenderId:"702880974315",appId:"1:702880974315:web:985321dc9180046629c5ae"};
+const app=initializeApp(cfg);
+const auth=getAuth(app);const db=getFirestore(app);
+window.__fb={auth,db,signInWithEmailAndPassword,signOut,onAuthStateChanged,doc,setDoc,getDoc,serverTimestamp};
+window.dispatchEvent(new Event('fbReady'));
+</script>
+<script>function fb(){return window.__fb;}</script>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="active">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="ico">🏠</span>
+      <h1>AI図面作成</h1>
+      <p>Gemini 2.5 Flash × Firebase</p>
+    </div>
+    <div class="lf"><label>メールアドレス</label><input type="email" id="lEmail" autocomplete="email" placeholder="example@company.com"></div>
+    <div class="lf"><label>パスワード</label><input type="password" id="lPass" autocomplete="current-password" placeholder="パスワード"></div>
+    <div class="login-err" id="lErr"></div>
+    <button class="login-btn" onclick="doLogin()">🔑 ログイン</button>
+  </div>
+</div>
+
+<!-- APP BAR -->
+<div class="app-bar" id="appBar" style="display:none;">
+  <div class="app-bar-title">
+    <span class="ico">🏠</span>
+    <span>AI図面作成</span>
+    <span class="app-bar-badge">Gemini 2.5 Flash</span>
+  </div>
+  <div class="bar-btns">
+    <button class="bar-btn" onclick="showScreen('home')">🏠ホーム</button>
+    <button class="bar-btn" onclick="showScreen('canvas')" id="canvasNavBtn" style="display:none;">📐図面</button>
+    <button class="bar-btn" onclick="doLogout()">↩</button>
+  </div>
+</div>
+
+<!-- =============== HOME SCREEN =============== -->
+<div id="home-screen" class="screen">
+  <div class="home-hero">
+    <h2>🏗️ 間取り図面作成システム</h2>
+    <p>テキスト・音声入力でAIが自動生成<br>1F・2F各フロアを段階的に設計</p>
+  </div>
+
+  <!-- モジュール選択 -->
+  <div class="module-bar">
+    <span class="module-bar-label">📐 モジュール：</span>
+    <button class="mod-btn active" id="mod900" onclick="setModule(900)">900mm</button>
+    <button class="mod-btn" id="mod910" onclick="setModule(910)">910mm</button>
+    <button class="mod-btn" id="modCustom" onclick="setModule('custom')">カスタム</button>
+    <div id="modCustomWrap" style="display:none;display:flex;align-items:center;gap:4px;">
+      <input class="mod-custom-input" type="number" id="modCustomVal" placeholder="例:1000" inputmode="decimal" onchange="setModuleCustom()">
+      <span style="font-size:11px;color:var(--text3);">mm</span>
+    </div>
+  </div>
+
+  <div class="workflow" id="wfWrap">
+
+    <!-- STEP 1: 1F -->
+    <div class="wf-step open" id="step1">
+      <div class="wf-head" onclick="toggleStep('step1')">
+        <div class="wf-num" id="wfnum1">1</div>
+        <div>
+          <div class="wf-title">1階　間取り設定</div>
+          <div class="wf-sub">ガレージ・UB・トイレ・廊下・階段・玄関・ホール等</div>
+        </div>
+      </div>
+      <div class="wf-body">
+
+        <!-- AI Prompt -->
+        <div class="ai-prompt-wrap">
+          <div class="ai-prompt-label">🤖 AIに1階を説明してください</div>
+          <div class="quick-prompts">
+            <button class="qp-btn" onclick="appendPrompt1('南向き玄関、ガレージ2台分')">玄関+ガレージ</button>
+            <button class="qp-btn" onclick="appendPrompt1('ユニットバス1620、トイレ、洗面所')">UB+トイレ</button>
+            <button class="qp-btn" onclick="appendPrompt1('廊下でつながる間取り')">廊下型</button>
+            <button class="qp-btn" onclick="appendPrompt1('ホール中心の動線')">ホール型</button>
+            <button class="qp-btn" onclick="appendPrompt1('階段は北側に設置')">北側階段</button>
+          </div>
+          <textarea class="ai-prompt-ta" id="prompt1" rows="3" placeholder="例：南向き玄関ホール、車2台ガレージ、ユニットバス、トイレ2か所、廊下でつないで、階段は北側に設置"></textarea>
+          <div class="ai-prompt-actions">
+            <button class="voice-btn2" id="vbtn1" onclick="startVoice('prompt1','vbtn1')" title="音声入力">🎤</button>
+            <button class="ai-gen-btn" id="gen1btn" onclick="generate1F()">✨ AI生成（1階）</button>
+            <button class="ai-search-btn" onclick="searchGenerate1F()">🔍 検索+生成</button>
+          </div>
+        </div>
+
+        <!-- Manual room picker -->
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;letter-spacing:1px;">▌ または手動で部屋を追加</div>
+        <div class="room-grid" id="roomGrid1"></div>
+
+        <!-- Span selector for selected room -->
+        <div id="spanSel1" style="display:none;background:#f0f8ff;border:1.5px solid #b0d0f0;border-radius:8px;padding:10px;margin-bottom:10px;">
+          <div class="span-sel-label">スパン選択（幅 × 奥行き）</div>
+          <div class="span-sel-label" style="margin-top:6px;">■ 幅</div>
+          <div class="span-btns" id="spanBtnsW1"></div>
+          <div class="span-custom">
+            <span style="font-size:11px;color:var(--text3);">カスタム幅:</span>
+            <input type="number" id="spanCustomW1" placeholder="例:2730" inputmode="decimal">
+            <span class="unit">mm</span>
+          </div>
+          <div class="span-sel-label" style="margin-top:8px;">■ 奥行き</div>
+          <div class="span-btns" id="spanBtnsH1"></div>
+          <div class="span-custom">
+            <span style="font-size:11px;color:var(--text3);">カスタム奥行き:</span>
+            <input type="number" id="spanCustomH1" placeholder="例:1820" inputmode="decimal">
+            <span class="unit">mm</span>
+          </div>
+          <button style="width:100%;margin-top:10px;padding:9px;background:var(--accent2);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;" onclick="addSelectedRoom(1)">➕ この部屋を1階に追加</button>
+        </div>
+
+        <!-- Layout list 1F -->
+        <div id="layoutList1" class="layout-list"></div>
+        <div id="f1summary" class="summary-card" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: 2F -->
+    <div class="wf-step" id="step2">
+      <div class="wf-head" onclick="toggleStep('step2')">
+        <div class="wf-num" id="wfnum2">2</div>
+        <div>
+          <div class="wf-title">2階　間取り設定</div>
+          <div class="wf-sub">LDK・洋室・和室・トイレ・廊下等</div>
+        </div>
+      </div>
+      <div class="wf-body">
+        <div class="ai-prompt-wrap">
+          <div class="ai-prompt-label">🤖 AIに2階を説明してください</div>
+          <div class="quick-prompts">
+            <button class="qp-btn" onclick="appendPrompt2('LDK20畳、南向き')">LDK南向き</button>
+            <button class="qp-btn" onclick="appendPrompt2('主寝室8畳、洋室6畳×2')">寝室+洋室</button>
+            <button class="qp-btn" onclick="appendPrompt2('和室6畳、押入れあり')">和室</button>
+            <button class="qp-btn" onclick="appendPrompt2('トイレ、洗面台')">水回り</button>
+            <button class="qp-btn" onclick="appendPrompt2('ベランダ南向き')">ベランダ</button>
+          </div>
+          <textarea class="ai-prompt-ta" id="prompt2" rows="3" placeholder="例：LDK20畳南向き、主寝室8畳、洋室6畳×2、和室4畳半、トイレ、廊下、ベランダ南側"></textarea>
+          <div class="ai-prompt-actions">
+            <button class="voice-btn2" id="vbtn2" onclick="startVoice('prompt2','vbtn2')" title="音声入力">🎤</button>
+            <button class="ai-gen-btn" id="gen2btn" onclick="generate2F()">✨ AI生成（2階）</button>
+            <button class="ai-search-btn" onclick="searchGenerate2F()">🔍 検索+生成</button>
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;letter-spacing:1px;">▌ または手動で部屋を追加</div>
+        <div class="room-grid" id="roomGrid2"></div>
+        <div id="spanSel2" style="display:none;background:#f0f8ff;border:1.5px solid #b0d0f0;border-radius:8px;padding:10px;margin-bottom:10px;">
+          <div class="span-sel-label">スパン選択（幅 × 奥行き）</div>
+          <div class="span-sel-label" style="margin-top:6px;">■ 幅</div>
+          <div class="span-btns" id="spanBtnsW2"></div>
+          <div class="span-custom">
+            <span style="font-size:11px;color:var(--text3);">カスタム幅:</span>
+            <input type="number" id="spanCustomW2" placeholder="例:2730" inputmode="decimal">
+            <span class="unit">mm</span>
+          </div>
+          <div class="span-sel-label" style="margin-top:8px;">■ 奥行き</div>
+          <div class="span-btns" id="spanBtnsH2"></div>
+          <div class="span-custom">
+            <span style="font-size:11px;color:var(--text3);">カスタム奥行き:</span>
+            <input type="number" id="spanCustomH2" placeholder="例:1820" inputmode="decimal">
+            <span class="unit">mm</span>
+          </div>
+          <button style="width:100%;margin-top:10px;padding:9px;background:var(--accent2);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;" onclick="addSelectedRoom(2)">➕ この部屋を2階に追加</button>
+        </div>
+
+        <div id="layoutList2" class="layout-list"></div>
+        <div id="f2summary" class="summary-card" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Generate -->
+    <div class="wf-step" id="step3">
+      <div class="wf-head" onclick="toggleStep('step3')">
+        <div class="wf-num" id="wfnum3">3</div>
+        <div>
+          <div class="wf-title">図面を生成・編集</div>
+          <div class="wf-sub">AIがレイアウトを最適化して描画</div>
+        </div>
+      </div>
+      <div class="wf-body">
+        <div id="preflight" style="background:#f0f8ff;border:1.5px solid #b0d0f0;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;line-height:1.8;color:var(--text2);">
+          1F・2Fに部屋を追加してから生成してください。
+        </div>
+        <button class="gen-main-btn" onclick="generateFull()" id="genFullBtn">
+          <span>📐</span><span>全体図面を生成する</span>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /workflow -->
+</div>
+
+<!-- =============== CANVAS SCREEN =============== -->
+<div id="canvas-screen" class="screen">
+  <div class="canvas-toolbar" id="canvasToolbar">
+    <!-- floor switch -->
+    <div class="floor-switch">
+      <button class="fs-btn active" id="cv1f" onclick="switchFloor(1)">1F</button>
+      <button class="fs-btn" id="cv2f" onclick="switchFloor(2)">2F</button>
+    </div>
+    <button class="tool-btn active" id="tsel" onclick="setTool('select')">↖選択</button>
+    <button class="tool-btn" id="tmove" onclick="setTool('move')">✥移動</button>
+    <button class="tool-btn" id="tdoor" onclick="setTool('door')">🚪ドア</button>
+    <button class="tool-btn" id="twindow" onclick="setTool('window')">🪟窓</button>
+    <button class="tool-btn" id="tpillar" onclick="setTool('pillar')">⬛柱</button>
+    <button class="tool-btn" id="twall" onclick="setTool('wall')">▬壁</button>
+    <button class="tool-btn danger" id="tdel" onclick="setTool('delete')">🗑削除</button>
+    <button class="tool-btn" onclick="resetView()" style="margin-left:auto;">↺リセット</button>
+    <button class="tool-btn" onclick="exportPNG()">📷保存</button>
+  </div>
+
+  <div class="canvas-area" id="canvasArea">
+    <canvas id="floorCanvas"></canvas>
+  </div>
+
+  <!-- Props panel -->
+  <div class="props-panel" id="propsPanel" style="display:none;">
+    <div class="props-row" id="propsContent"></div>
+  </div>
+</div>
+
+<!-- AI Chat Panel -->
+<div class="ai-chat-panel" id="aiChatPanel">
+  <div class="ai-chat-inner">
+    <div class="ai-chat-head">
+      <span>🤖</span>
+      <h3>AI建築士アシスタント</h3>
+      <button onclick="closeAIChat()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;">✕</button>
+    </div>
+    <div class="ai-quick2">
+      <button class="aqb2" onclick="aiQ('この間取りの動線は適切ですか？')">動線チェック</button>
+      <button class="aqb2" onclick="aiQ('採光・通風の改善点は？')">採光改善</button>
+      <button class="aqb2" onclick="aiQ('建築基準法上の問題点は？')">法規確認</button>
+      <button class="aqb2" onclick="aiQ('部屋の配置を最適化して')">配置最適化</button>
+      <button class="aqb2" onclick="aiQ('この間取りのコスト削減案は？')">コスト削減</button>
+    </div>
+    <div class="ai-chat-msgs" id="aiChatMsgs"></div>
+    <div class="ai-inp-row">
+      <textarea class="ai-ta2" id="aiChatInput" rows="1" placeholder="AIに質問・相談…"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px';"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIChat();}"></textarea>
+      <button class="ai-send2" onclick="sendAIChat()">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab-ai" id="fabAI" onclick="openAIChat()">🤖</button>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-ring"></div>
+  <div class="loading-text" id="loadingText">Gemini 2.5 Flash 解析中...</div>
+  <div class="loading-sub" id="loadingSub">少しお待ちください</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+//  FIREBASE FUNCTIONS → Gemini 2.5 Flash
+// ============================================================
+var FUNCTIONS_BASE=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ?'http://localhost:5001/kensetsu-nippo-842a2/us-central1'
+  :'https://us-central1-kensetsu-nippo-842a2.cloudfunctions.net';
+
+async function callGemini(prompt,useSearch=false){
+  const r=await fetch(FUNCTIONS_BASE+'/askClaude',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt,model:'gemini-2.5-flash',useSearch})
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('通信エラー: '+(e?.error?.message||r.status));}
+  const d=await r.json();
+  return d?.candidates?.[0]?.content?.parts?.[0]?.text||d?.text||d?.result||'応答なし';
+}
+
+// ============================================================
+//  AUTH
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('lEmail').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('lPass').focus();});
+  document.getElementById('lPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+});
+window.addEventListener('fbReady',()=>{
+  fb().onAuthStateChanged(fb().auth,user=>{
+    if(user){
+      document.getElementById('loginScreen').classList.remove('active');
+      document.getElementById('appBar').style.display='flex';
+      showScreen('home');
+    } else {
+      document.getElementById('loginScreen').classList.add('active');
+      document.getElementById('appBar').style.display='none';
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    }
+  });
+});
+async function doLogin(){
+  const email=document.getElementById('lEmail').value.trim();
+  const pass=document.getElementById('lPass').value;
+  const err=document.getElementById('lErr');err.textContent='';
+  if(!email||!pass){err.textContent='入力してください';return;}
+  try{await fb().signInWithEmailAndPassword(fb().auth,email,pass);}
+  catch(e){const m={'auth/invalid-credential':'メールまたはパスワードが違います','auth/too-many-requests':'しばらくお待ちください'};err.textContent=m[e.code]||'ログイン失敗';}
+}
+async function doLogout(){if(confirm('ログアウトしますか？'))await fb().signOut(fb().auth);}
+
+// ============================================================
+//  SCREENS
+// ============================================================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id+'-screen').classList.add('active');
+  const fabAI=document.getElementById('fabAI');
+  const canvasBtn=document.getElementById('canvasNavBtn');
+  if(id==='canvas'){fabAI.style.display='flex';if(canvasBtn)canvasBtn.style.display='block';}
+  else{fabAI.style.display='none';}
+  if(id==='canvas'){resizeCanvas();renderCanvas();}
+}
+
+// ============================================================
+//  MODULE
+// ============================================================
+var MODULE=900;
+
+function setModule(v){
+  MODULE = v==='custom'?MODULE:parseInt(v);
+  ['900','910','Custom'].forEach(k=>{
+    const b=document.getElementById('mod'+k);
+    if(b)b.classList.remove('active');
+  });
+  if(v===900)document.getElementById('mod900').classList.add('active');
+  else if(v===910)document.getElementById('mod910').classList.add('active');
+  else document.getElementById('modCustom').classList.add('active');
+  const cw=document.getElementById('modCustomWrap');
+  cw.style.display=v==='custom'?'flex':'none';
+  rebuildSpanButtons();
+  toast('モジュール: '+(v==='custom'?document.getElementById('modCustomVal').value:v)+'mm');
+}
+function setModuleCustom(){
+  const v=parseInt(document.getElementById('modCustomVal').value)||900;
+  MODULE=v;rebuildSpanButtons();
+}
+
+function getSpans(){
+  const spans=[];
+  for(let i=1;i<=12;i++) spans.push(MODULE*i);
+  return spans;
+}
+
+function rebuildSpanButtons(){
+  [1,2].forEach(f=>buildSpanBtns(f));
+}
+
+function buildSpanBtns(f){
+  const spans=getSpans().slice(0,8);
+  ['W','H'].forEach(dim=>{
+    const container=document.getElementById('spanBtns'+dim+f);
+    if(!container)return;
+    container.innerHTML='';
+    spans.forEach(s=>{
+      const b=document.createElement('button');
+      b.className='span-btn';
+      b.textContent=s+'mm';
+      b.onclick=()=>{
+        container.querySelectorAll('.span-btn').forEach(x=>x.classList.remove('picked'));
+        b.classList.add('picked');
+        document.getElementById('spanCustom'+dim+f).value='';
+      };
+      container.appendChild(b);
+    });
+  });
+}
+
+// ============================================================
+//  ROOM TYPES
+// ============================================================
+var ROOM_TYPES_1F=[
+  {type:'garage',label:'ガレージ',icon:'🚗',w:0,h:0,defW:5460,defH:5460,color:'#d0d8e0'},
+  {type:'entrance',label:'玄関',icon:'🚪',w:0,h:0,defW:1820,defH:1820,color:'#e8f0f8'},
+  {type:'hall1f',label:'玄関ホール',icon:'🏠',w:0,h:0,defW:2730,defH:2730,color:'#e8f4ff'},
+  {type:'ub',label:'ユニットバス',icon:'🛁',w:0,h:0,defW:1820,defH:1620,color:'#e0f0ff'},
+  {type:'toilet1f',label:'トイレ',icon:'🚽',w:0,h:0,defW:910,defH:1820,color:'#f0e8f8'},
+  {type:'washroom',label:'洗面所',icon:'🪥',w:0,h:0,defW:1820,defH:1820,color:'#e4f8f0'},
+  {type:'corridor1f',label:'廊下',icon:'⬌',w:0,h:0,defW:3640,defH:910,color:'#f8f4e8'},
+  {type:'stairs1f',label:'階段',icon:'🪜',w:0,h:0,defW:1820,defH:2730,color:'#ede8f8'},
+  {type:'laundry',label:'脱衣所',icon:'👕',w:0,h:0,defW:1820,defH:1820,color:'#fff0e8'},
+  {type:'storage1f',label:'納戸',icon:'📦',w:0,h:0,defW:1820,defH:2730,color:'#f0ede8'},
+  {type:'living1f',label:'リビング',icon:'🛋️',w:0,h:0,defW:5460,defH:4550,color:'#fff8e8'},
+  {type:'tatami',label:'和室',icon:'🏯',w:0,h:0,defW:3640,defH:3640,color:'#f8f0e0'},
+];
+
+var ROOM_TYPES_2F=[
+  {type:'ldk',label:'LDK',icon:'🍳',w:0,h:0,defW:7280,defH:5460,color:'#fff8e8'},
+  {type:'living2f',label:'リビング',icon:'🛋️',w:0,h:0,defW:5460,defH:4550,color:'#fffae0'},
+  {type:'dining',label:'ダイニング',icon:'🍽️',w:0,h:0,defW:3640,defH:3640,color:'#f8ffe0'},
+  {type:'kitchen',label:'キッチン',icon:'🍳',w:0,h:0,defW:2730,defH:3640,color:'#e8ffe8'},
+  {type:'bedroom',label:'主寝室',icon:'🛏️',w:0,h:0,defW:4550,defH:4550,color:'#e8eeff'},
+  {type:'room6',label:'洋室6畳',icon:'🛏️',w:0,h:0,defW:3640,defH:3640,color:'#eeeeff'},
+  {type:'japanese',label:'和室',icon:'🏯',w:0,h:0,defW:3640,defH:3640,color:'#f8f0e0'},
+  {type:'toilet2f',label:'トイレ',icon:'🚽',w:0,h:0,defW:910,defH:1820,color:'#f0e8f8'},
+  {type:'corridor2f',label:'廊下',icon:'⬌',w:0,h:0,defW:3640,defH:910,color:'#f8f4e8'},
+  {type:'stairs2f',label:'階段',icon:'🪜',w:0,h:0,defW:1820,defH:2730,color:'#ede8f8'},
+  {type:'balcony',label:'ベランダ',icon:'🌿',w:0,h:0,defW:5460,defH:1820,color:'#e0ffe8'},
+  {type:'closet',label:'クローゼット',icon:'👔',w:0,h:0,defW:1820,defH:910,color:'#f0ede8'},
+  {type:'storage2f',label:'納戸',icon:'📦',w:0,h:0,defW:1820,defH:2730,color:'#ede8e0'},
+  {type:'child1',label:'子供部屋①',icon:'🧒',w:0,h:0,defW:3640,defH:3640,color:'#fff0f8'},
+  {type:'study',label:'書斎',icon:'📚',w:0,h:0,defW:2730,defH:2730,color:'#e8f0ff'},
+  {type:'washroom2',label:'洗面所',icon:'🪥',w:0,h:0,defW:1820,defH:1820,color:'#e4f8f0'},
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+var state={
+  rooms:{1:[],2:[]},
+  selectedRoom:null, // {floor,type}
+  currentFloor:1,
+  canvasTool:'select',
+  selectedId:null,
+  viewScale:1,
+  viewX:20,viewY:20,
+  mmPerPx:10,
+  nextId:1,
+  elements:{1:[],2:[]}, // canvas elements
+};
+
+// ============================================================
+//  BUILD ROOM GRIDS
+// ============================================================
+function buildRoomGrids(){
+  buildRoomGrid(1,ROOM_TYPES_1F);
+  buildRoomGrid(2,ROOM_TYPES_2F);
+  buildSpanBtns(1);
+  buildSpanBtns(2);
+}
+
+function buildRoomGrid(floor,types){
+  const grid=document.getElementById('roomGrid'+floor);
+  grid.innerHTML='';
+  types.forEach(rt=>{
+    const div=document.createElement('div');
+    div.className='room-chip';
+    div.id='rc_'+floor+'_'+rt.type;
+    div.innerHTML=`<span class="ricon">${rt.icon}</span><span class="rlabel">${rt.label}</span>`;
+    div.onclick=()=>selectRoomType(floor,rt);
+    grid.appendChild(div);
+  });
+}
+
+function selectRoomType(floor,rt){
+  // Deselect all
+  document.querySelectorAll('.room-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('rc_'+floor+'_'+rt.type).classList.add('selected');
+  state.selectedRoom={floor,rt};
+  // Show span selector
+  const ss=document.getElementById('spanSel'+floor);
+  ss.style.display='block';
+  // Set default spans
+  const defW=rt.defW;const defH=rt.defH;
+  // Pick closest span button
+  [1,2].forEach(f=>{
+    ['W','H'].forEach(dim=>{
+      const def=dim==='W'?defW:defH;
+      const btns=document.querySelectorAll('#spanBtns'+dim+floor+' .span-btn');
+      let closest=null,closestDiff=Infinity;
+      btns.forEach(b=>{
+        const v=parseInt(b.textContent);
+        const diff=Math.abs(v-def);
+        if(diff<closestDiff){closestDiff=diff;closest=b;}
+      });
+      if(closest&&f===floor){
+        closest.click();
+      }
+    });
+  });
+}
+
+function getSpanVal(floor,dim){
+  const custom=document.getElementById('spanCustom'+dim+floor).value;
+  if(custom&&parseInt(custom)>0) return parseInt(custom);
+  const picked=document.querySelector('#spanBtns'+dim+floor+' .span-btn.picked');
+  return picked?parseInt(picked.textContent):MODULE*2;
+}
+
+function addSelectedRoom(floor){
+  if(!state.selectedRoom||state.selectedRoom.floor!==floor){toast('部屋を選択してください');return;}
+  const rt=state.selectedRoom.rt;
+  const w=getSpanVal(floor,'W');
+  const h=getSpanVal(floor,'H');
+  addRoom(floor,{...rt,w,h});
+  document.getElementById('spanSel'+floor).style.display='none';
+  document.querySelectorAll('.room-chip').forEach(c=>c.classList.remove('selected'));
+  state.selectedRoom=null;
+}
+
+function addRoom(floor,data){
+  const room={
+    id:state.nextId++,
+    floor,
+    type:data.type,
+    label:data.label,
+    icon:data.icon,
+    w:data.w||data.defW||MODULE*2,
+    h:data.h||data.defH||MODULE*2,
+    color:data.color||'#e8f4ff',
+    x:0,y:0,
+  };
+  state.rooms[floor].push(room);
+  renderLayoutList(floor);
+  updateSummary(floor);
+  updatePreflight();
+  toast(room.icon+' '+room.label+' を追加しました');
+}
+
+function renderLayoutList(floor){
+  const list=document.getElementById('layoutList'+floor);
+  const rooms=state.rooms[floor];
+  if(!rooms.length){list.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px;">まだ部屋がありません</div>';return;}
+  list.innerHTML=rooms.map(r=>`
+    <div class="layout-item">
+      <span class="li-icon">${r.icon}</span>
+      <div class="li-info">
+        <div class="li-name">${r.label}</div>
+        <div class="li-dim">${r.w}mm × ${r.h}mm (${Math.round(r.w*r.h/1000000*100)/100}㎡)</div>
+      </div>
+      <button class="li-del" onclick="removeRoom(${floor},${r.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeRoom(floor,id){
+  state.rooms[floor]=state.rooms[floor].filter(r=>r.id!==id);
+  renderLayoutList(floor);
+  updateSummary(floor);
+  updatePreflight();
+  toast('削除しました');
+}
+
+function updateSummary(floor){
+  const rooms=state.rooms[floor];
+  const el=document.getElementById('f'+floor+'summary');
+  if(!rooms.length){el.style.display='none';return;}
+  const totalArea=rooms.reduce((s,r)=>s+r.w*r.h/1000000,0);
+  const tsubo=totalArea/3.31;
+  el.style.display='block';
+  el.innerHTML=`
+    <div class="summary-title">📊 ${floor}階 合計</div>
+    <div class="summary-grid">
+      <div class="summary-item"><div class="si-label">部屋数</div><div class="si-val">${rooms.length}室</div></div>
+      <div class="summary-item"><div class="si-label">延べ面積</div><div class="si-val">${Math.round(totalArea*100)/100}㎡</div></div>
+      <div class="summary-item"><div class="si-label">坪数換算</div><div class="si-val">${Math.round(tsubo*10)/10}坪</div></div>
+      <div class="summary-item"><div class="si-label">モジュール</div><div class="si-val">${MODULE}mm</div></div>
+    </div>`;
+}
+
+function updatePreflight(){
+  const r1=state.rooms[1].length;const r2=state.rooms[2].length;
+  const el=document.getElementById('preflight');
+  const btn=document.getElementById('genFullBtn');
+  if(!r1&&!r2){
+    el.innerHTML='⚠️ 1F・2Fに部屋を追加してから生成してください。';
+    btn.disabled=true;return;
+  }
+  let msg='';
+  if(r1) msg+=`✅ 1階: ${r1}室　`;
+  if(r2) msg+=`✅ 2階: ${r2}室　`;
+  el.innerHTML='<span style="color:var(--accent2)">'+msg+'</span><br><span style="font-size:11px;color:var(--text3);">「全体図面を生成する」を押してください</span>';
+  btn.disabled=false;
+}
+
+// ============================================================
+//  STEP TOGGLE
+// ============================================================
+function toggleStep(id){
+  const el=document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+// ============================================================
+//  AI GENERATE 1F
+// ============================================================
+async function generate1F(){
+  const prompt=document.getElementById('prompt1').value.trim();
+  if(!prompt){toast('1階の要望を入力してください');return;}
+  await generateFloor(1,prompt,false);
+}
+async function searchGenerate1F(){
+  const prompt=document.getElementById('prompt1').value.trim()||'一般的な1階間取り';
+  await generateFloor(1,prompt,true);
+}
+async function generate2F(){
+  const prompt=document.getElementById('prompt2').value.trim();
+  if(!prompt){toast('2階の要望を入力してください');return;}
+  await generateFloor(2,prompt,false);
+}
+async function searchGenerate2F(){
+  const prompt=document.getElementById('prompt2').value.trim()||'一般的な2階間取り';
+  await generateFloor(2,prompt,true);
+}
+
+async function generateFloor(floor,userPrompt,useSearch){
+  showLoading(useSearch?'Google検索+Gemini解析中...':'Gemini 2.5 Flash で解析中...','1F・2Fの部屋構成を最適化しています');
+  const roomTypes=floor===1?ROOM_TYPES_1F:ROOM_TYPES_2F;
+  const typeList=roomTypes.map(r=>r.type+':'+r.label).join(', ');
+  const sys=`あなたは日本の木造住宅専門の建築設計AIです。
+ユーザーの要望を解析し、${floor}階の部屋リストをJSONで返してください。
+
+モジュール: ${MODULE}mm
+利用可能な部屋タイプ: ${typeList}
+
+必ずこの形式のJSONのみを返してください（前置き・説明・マークダウン不要）：
+{"rooms":[{"type":"タイプ","label":"部屋名","icon":"絵文字","w":幅mm,"h":奥行mm,"color":"#RRGGBB"},...]}
+
+ルール：
+- w・hはすべて${MODULE}mmの倍数
+- 幅・奥行きは部屋の用途に合った現実的な寸法
+- 部屋が重ならないよう配置
+- 動線・法規・快適性を考慮
+- colorは部屋タイプに合った淡い色`;
+
+  try{
+    const resp=await callGemini(sys+'\n\nユーザー要望: '+userPrompt,useSearch);
+    const m=resp.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('JSON取得失敗');
+    const data=JSON.parse(m[0]);
+    if(!data.rooms||!data.rooms.length) throw new Error('部屋リストが空');
+    state.rooms[floor]=[];
+    data.rooms.forEach(r=>{
+      const rt=roomTypes.find(x=>x.type===r.type)||{icon:'🏠',color:'#e8f4ff'};
+      addRoom(floor,{...rt,...r});
+    });
+    hideLoading();
+    toast('✅ '+(useSearch?'検索+':'')+'AI生成完了: '+floor+'階 '+data.rooms.length+'室');
+    // Open step2 after 1F
+    if(floor===1){
+      document.getElementById('step1').classList.remove('open');
+      document.getElementById('step2').classList.add('open');
+    } else {
+      document.getElementById('step2').classList.remove('open');
+      document.getElementById('step3').classList.add('open');
+    }
+  }catch(e){
+    hideLoading();
+    toast('❌ エラー: '+e.message);
+  }
+}
+
+// ============================================================
+//  FULL GENERATE → CANVAS
+// ============================================================
+async function generateFull(){
+  if(!state.rooms[1].length&&!state.rooms[2].length){toast('部屋を追加してください');return;}
+  showLoading('Gemini 2.5 Flash でレイアウト最適化中...','柱・壁・動線を自動配置しています');
+  try{
+    await layoutRooms();
+    hideLoading();
+    document.getElementById('canvasNavBtn').style.display='block';
+    showScreen('canvas');
+    toast('✅ 図面を生成しました！タップして編集できます');
+  }catch(e){
+    hideLoading();
+    toast('❌ エラー: '+e.message);
+  }
+}
+
+// ============================================================
+//  AUTO LAYOUT
+// ============================================================
+async function layoutRooms(){
+  // Simple grid layout for each floor
+  [1,2].forEach(floor=>{
+    state.elements[floor]=[];
+    const rooms=state.rooms[floor];
+    if(!rooms.length) return;
+    const PADDING=MODULE;
+    const COLS_TARGET=3;
+    // Build a simple row-column placement
+    let curX=PADDING,curY=PADDING,rowH=0,col=0;
+    const placed=[];
+    rooms.forEach(r=>{
+      const el={
+        id:state.nextId++,
+        type:'room',
+        floor,
+        roomType:r.type,
+        label:r.label,
+        icon:r.icon,
+        x:curX,y:curY,
+        w:r.w,h:r.h,
+        color:r.color||'#e8f4ff',
+      };
+      placed.push(el);
+      curX+=r.w+MODULE/2;
+      rowH=Math.max(rowH,r.h);
+      col++;
+      if(col>=COLS_TARGET||(r.type==='garage'||r.type==='ldk')){
+        curX=PADDING;
+        curY+=rowH+MODULE/2;
+        rowH=0;col=0;
+      }
+    });
+    // Add pillars at room corners
+    const pillars=[];
+    placed.forEach(r=>{
+      [[r.x,r.y],[r.x+r.w,r.y],[r.x,r.y+r.h],[r.x+r.w,r.y+r.h]].forEach(([px,py])=>{
+        if(!pillars.find(p=>Math.abs(p.x-px)<50&&Math.abs(p.y-py)<50))
+          pillars.push({id:state.nextId++,type:'pillar',floor,x:px,y:py});
+      });
+    });
+    state.elements[floor]=[...placed,...pillars];
+  });
+}
+
+// ============================================================
+//  CANVAS
+// ============================================================
+const canvas=document.getElementById('floorCanvas');
+const ctx=canvas.getContext('2d');
+var FLOOR=1;
+
+function resizeCanvas(){
+  const area=document.getElementById('canvasArea');
+  const toolbarH=document.getElementById('canvasToolbar').offsetHeight;
+  const propsH=document.getElementById('propsPanel').offsetHeight||0;
+  const totalH=window.innerHeight-52-toolbarH-propsH;
+  canvas.width=area.clientWidth||window.innerWidth;
+  canvas.height=Math.max(totalH,300);
+  area.style.height=canvas.height+'px';
+  renderCanvas();
+}
+window.addEventListener('resize',resizeCanvas);
+
+function switchFloor(f){
+  FLOOR=f;
+  document.getElementById('cv1f').classList.toggle('active',f===1);
+  document.getElementById('cv2f').classList.toggle('active',f===2);
+  renderCanvas();
+}
+
+function renderCanvas(){
+  if(!canvas||!ctx) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(state.viewX,state.viewY);
+  ctx.scale(state.viewScale,state.viewScale);
+  const px=state.mmPerPx;
+
+  // Grid
+  const gstep=MODULE/px;
+  ctx.strokeStyle='rgba(180,210,230,.4)';ctx.lineWidth=.5;
+  for(let x=0;x<3000;x+=gstep){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,3000);ctx.stroke();}
+  for(let y=0;y<3000;y+=gstep){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(3000,y);ctx.stroke();}
+
+  const els=(state.elements[FLOOR]||[]);
+
+  // Rooms
+  els.filter(e=>e.type==='room').forEach(r=>{
+    const x=r.x/px,y=r.y/px,w=r.w/px,h=r.h/px;
+    const isSel=r.id===state.selectedId;
+    ctx.shadowColor='rgba(0,0,0,.12)';ctx.shadowBlur=isSel?12:4;ctx.shadowOffsetX=1;ctx.shadowOffsetY=2;
+    ctx.fillStyle=r.color||'#e8f4ff';
+    ctx.strokeStyle=isSel?'#1a7abf':'#8ab0cc';
+    ctx.lineWidth=isSel?2.5:1.5;
+    ctx.beginPath();ctx.rect(x,y,w,h);ctx.fill();ctx.stroke();
+    ctx.shadowColor='transparent';ctx.shadowBlur=0;
+
+    // Icon
+    const iconSize=Math.min(w,h)*.35;
+    ctx.font=iconSize+'px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(r.icon,x+w/2,y+h/2-8/px);
+
+    // Label
+    const fs=Math.max(8,Math.min(13,w*.12));
+    ctx.font=`bold ${fs}px 'Hiragino Kaku Gothic ProN',Meiryo,sans-serif`;
+    ctx.fillStyle='#1a2a38';
+    ctx.textBaseline='bottom';
+    if(w>50/px)ctx.fillText(r.label,x+w/2,y+h-3/px);
+
+    // Dimension
+    if(isSel){
+      ctx.font=`${Math.max(7,Math.min(10,w*.1))}px 'Share Tech Mono',monospace`;
+      ctx.fillStyle='#1a7abf';
+      ctx.textBaseline='top';
+      ctx.fillText(r.w+'×'+r.h,x+w/2,y+4/px);
+    }
+    // Resize handle
+    if(isSel){
+      ctx.fillStyle='#1a7abf';
+      ctx.beginPath();ctx.arc(x+w,y+h,5/px,0,Math.PI*2);ctx.fill();
+    }
+  });
+
+  // Pillars
+  els.filter(e=>e.type==='pillar').forEach(p=>{
+    const px2=p.x/px,py2=p.y/px,s=105/px;
+    ctx.fillStyle='#c0ccd8';ctx.strokeStyle='#7090a8';ctx.lineWidth=1;
+    ctx.beginPath();ctx.rect(px2-s/2,py2-s/2,s,s);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#90a8b8';ctx.lineWidth=.5;
+    ctx.beginPath();ctx.moveTo(px2-s/2,py2-s/2);ctx.lineTo(px2+s/2,py2+s/2);
+    ctx.moveTo(px2+s/2,py2-s/2);ctx.lineTo(px2-s/2,py2+s/2);ctx.stroke();
+  });
+
+  // Doors
+  els.filter(e=>e.type==='door').forEach(d=>{
+    const x=d.x/px,y=d.y/px;
+    const l=MODULE*.9/px;
+    ctx.strokeStyle='#1a7abf';ctx.lineWidth=2/px;
+    ctx.beginPath();ctx.rect(x,y-6/px,l,6/px);
+    ctx.stroke();
+    ctx.beginPath();ctx.arc(x,y-6/px,l,0,Math.PI/2);ctx.stroke();
+  });
+
+  // Windows
+  els.filter(e=>e.type==='window').forEach(w=>{
+    const x=w.x/px,y=w.y/px;
+    const l=MODULE*1.5/px;
+    ctx.strokeStyle='#1a9060';ctx.lineWidth=2/px;
+    ctx.strokeRect(x,y-8/px,l,8/px);
+    for(let i=1;i<4;i++){
+      ctx.beginPath();ctx.moveTo(x+l*i/4,y-8/px);ctx.lineTo(x+l*i/4,y);ctx.stroke();
+    }
+  });
+
+  ctx.restore();
+}
+
+// ============================================================
+//  CANVAS INTERACTIONS
+// ============================================================
+var drag={active:false,startWx:0,startWy:0,el:null,elOrigX:0,elOrigY:0};
+var pan={active:false,startX:0,startY:0,origVX:0,origVY:0};
+var resizeDrag={active:false,el:null,origW:0,origH:0,startMx:0,startMy:0};
+
+function canvasToWorld(mx,my){
+  return{x:((mx-state.viewX)/state.viewScale)*state.mmPerPx,y:((my-state.viewY)/state.viewScale)*state.mmPerPx};
+}
+function hitRoom(wx,wy){
+  const els=(state.elements[FLOOR]||[]).filter(e=>e.type==='room');
+  for(let i=els.length-1;i>=0;i--){
+    const r=els[i];
+    if(wx>=r.x&&wx<=r.x+r.w&&wy>=r.y&&wy<=r.y+r.h)return r;
+  }return null;
+}
+function snapMM(v){return Math.round(v/MODULE)*MODULE;}
+
+canvas.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const{x:wx,y:wy}=canvasToWorld(mx,my);
+
+  if(state.canvasTool==='select'||state.canvasTool==='move'){
+    const hit=hitRoom(wx,wy);
+    if(hit){
+      // Check resize handle
+      if(hit.id===state.selectedId){
+        const hx=(hit.x+hit.w)/state.mmPerPx*state.viewScale+state.viewX;
+        const hy=(hit.y+hit.h)/state.mmPerPx*state.viewScale+state.viewY;
+        if(Math.abs(mx-hx)<10&&Math.abs(my-hy)<10){
+          resizeDrag={active:true,el:hit,origW:hit.w,origH:hit.h,startMx:mx,startMy:my};
+          return;
+        }
+      }
+      state.selectedId=hit.id;
+      drag={active:true,startWx:wx-hit.x,startWy:wy-hit.y,el:hit,elOrigX:hit.x,elOrigY:hit.y};
+      showProps(hit);
+    } else {
+      state.selectedId=null;
+      hideProps();
+      pan={active:true,startX:e.clientX,startY:e.clientY,origVX:state.viewX,origVY:state.viewY};
+    }
+    renderCanvas();
+  } else if(state.canvasTool==='door'){
+    const hit=hitRoom(wx,wy);
+    if(hit){
+      state.elements[FLOOR].push({id:state.nextId++,type:'door',floor:FLOOR,x:wx,y:wy});
+      toast('ドアを追加しました');renderCanvas();
+    }
+  } else if(state.canvasTool==='window'){
+    const hit=hitRoom(wx,wy);
+    if(hit){
+      state.elements[FLOOR].push({id:state.nextId++,type:'window',floor:FLOOR,x:wx,y:wy});
+      toast('窓を追加しました');renderCanvas();
+    }
+  } else if(state.canvasTool==='pillar'){
+    state.elements[FLOOR].push({id:state.nextId++,type:'pillar',floor:FLOOR,x:snapMM(wx),y:snapMM(wy)});
+    toast('柱を追加しました');renderCanvas();
+  } else if(state.canvasTool==='delete'){
+    const hit=hitRoom(wx,wy);
+    if(hit){
+      state.elements[FLOOR]=state.elements[FLOOR].filter(e=>e.id!==hit.id);
+      state.selectedId=null;hideProps();
+      toast('削除しました');renderCanvas();
+    }
+  }
+});
+
+canvas.addEventListener('pointermove',e=>{
+  e.preventDefault();
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const{x:wx,y:wy}=canvasToWorld(mx,my);
+  if(pan.active){
+    state.viewX=pan.origVX+(e.clientX-pan.startX);
+    state.viewY=pan.origVY+(e.clientY-pan.startY);
+    renderCanvas();
+  }
+  if(drag.active&&drag.el){
+    drag.el.x=snapMM(wx-drag.startWx);
+    drag.el.y=snapMM(wy-drag.startWy);
+    renderCanvas();
+  }
+  if(resizeDrag.active&&resizeDrag.el){
+    const dx=(mx-resizeDrag.startMx)/state.viewScale*state.mmPerPx;
+    const dy=(my-resizeDrag.startMy)/state.viewScale*state.mmPerPx;
+    resizeDrag.el.w=Math.max(MODULE,snapMM(resizeDrag.origW+dx));
+    resizeDrag.el.h=Math.max(MODULE,snapMM(resizeDrag.origH+dy));
+    renderCanvas();
+  }
+});
+
+canvas.addEventListener('pointerup',()=>{
+  drag.active=false;pan.active=false;resizeDrag.active=false;
+});
+
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const f=e.deltaY<0?1.1:.9;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const bx=(mx-state.viewX)/state.viewScale,by=(my-state.viewY)/state.viewScale;
+  state.viewScale=Math.max(.1,Math.min(5,state.viewScale*f));
+  state.viewX=mx-bx*state.viewScale;state.viewY=my-by*state.viewScale;
+  renderCanvas();
+},{passive:false});
+
+function setTool(t){
+  state.canvasTool=t;
+  document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('t'+t)?.classList.add('active');
+  canvas.style.cursor=t==='select'?'default':'crosshair';
+}
+
+function resetView(){state.viewScale=1;state.viewX=20;state.viewY=20;renderCanvas();}
+
+function showProps(el){
+  const pp=document.getElementById('propsPanel');
+  const pc=document.getElementById('propsContent');
+  pp.style.display='block';
+  pc.innerHTML=`
+    <span class="props-label">${el.icon} ${el.label}</span>
+    <span class="props-label">幅:</span>
+    <input class="props-input" type="number" step="${MODULE}" value="${el.w}" onchange="updateElProp(${el.id},'w',+this.value)">
+    <span class="props-label">奥行:</span>
+    <input class="props-input" type="number" step="${MODULE}" value="${el.h}" onchange="updateElProp(${el.id},'h',+this.value)">
+    <button class="props-btn" onclick="addDoorToEl(${el.id})">🚪ドア</button>
+    <button class="props-btn" onclick="addWindowToEl(${el.id})">🪟窓</button>
+    <button class="props-btn" onclick="addPillarsToEl(${el.id})">⬛柱</button>
+    <button class="props-btn" onclick="aiSuggestEl(${el.id})">🤖AI提案</button>
+    <button class="props-btn del" onclick="deleteEl(${el.id})">削除</button>
+  `;
+  resizeCanvas();
+}
+function hideProps(){document.getElementById('propsPanel').style.display='none';resizeCanvas();}
+function updateElProp(id,key,val){
+  const el=(state.elements[FLOOR]||[]).find(e=>e.id===id);
+  if(el){el[key]=snapMM(val);renderCanvas();}
+}
+function addDoorToEl(id){
+  const el=(state.elements[FLOOR]||[]).find(e=>e.id===id);
+  if(!el) return;
+  state.elements[FLOOR].push({id:state.nextId++,type:'door',floor:FLOOR,x:el.x+el.w/2,y:el.y});
+  toast('ドアを追加しました');renderCanvas();
+}
+function addWindowToEl(id){
+  const el=(state.elements[FLOOR]||[]).find(e=>e.id===id);
+  if(!el) return;
+  state.elements[FLOOR].push({id:state.nextId++,type:'window',floor:FLOOR,x:el.x,y:el.y+el.h/2});
+  toast('窓を追加しました');renderCanvas();
+}
+function addPillarsToEl(id){
+  const el=(state.elements[FLOOR]||[]).find(e=>e.id===id);
+  if(!el) return;
+  [[el.x,el.y],[el.x+el.w,el.y],[el.x,el.y+el.h],[el.x+el.w,el.y+el.h]].forEach(([x,y])=>{
+    state.elements[FLOOR].push({id:state.nextId++,type:'pillar',floor:FLOOR,x,y});
+  });
+  toast('四隅に柱を追加しました');renderCanvas();
+}
+function deleteEl(id){
+  state.elements[FLOOR]=state.elements[FLOOR].filter(e=>e.id!==id);
+  state.selectedId=null;hideProps();toast('削除しました');renderCanvas();
+}
+
+async function aiSuggestEl(id){
+  const el=(state.elements[FLOOR]||[]).find(e=>e.id===id);
+  if(!el) return;
+  openAIChat();
+  const prompt=`${FLOOR}階の「${el.label}」（${el.w}mm×${el.h}mm）について、日本の木造住宅設計の観点から改善提案を3点教えてください。モジュール${MODULE}mmです。`;
+  sendAIChatMsg(prompt);
+}
+
+// ============================================================
+//  EXPORT
+// ============================================================
+function exportPNG(){
+  const link=document.createElement('a');
+  link.download=`間取り_${FLOOR}F_${new Date().toISOString().slice(0,10)}.png`;
+  link.href=canvas.toDataURL('image/png');
+  link.click();
+  toast('PNG保存しました');
+}
+
+// ============================================================
+//  AI CHAT
+// ============================================================
+var aiChatHist=[],aiChatBusy=false;
+
+function openAIChat(){
+  document.getElementById('aiChatPanel').classList.add('open');
+  if(!document.getElementById('aiChatMsgs').children.length){
+    appendAIMsg2('bot','こんにちは！AI建築士アシスタントです。\n間取りの改善・法規確認・動線チェックなど何でもご相談ください。');
+  }
+}
+function closeAIChat(){document.getElementById('aiChatPanel').classList.remove('open');}
+function aiQ(q){sendAIChatMsg(q);}
+
+function appendAIMsg2(role,text){
+  const msgs=document.getElementById('aiChatMsgs');
+  const div=document.createElement('div');div.className='ai-msg2 '+role;
+  const av=document.createElement('div');av.className='ai-av2';av.textContent=role==='bot'?'🏛️':'👤';
+  const bub=document.createElement('div');bub.className='ai-bub2';bub.textContent=text;
+  div.appendChild(av);div.appendChild(bub);
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function appendTyping2(){
+  const msgs=document.getElementById('aiChatMsgs');
+  const div=document.createElement('div');div.className='ai-msg2 bot';
+  const av=document.createElement('div');av.className='ai-av2';av.textContent='🤖';
+  const bub=document.createElement('div');bub.className='ai-bub2';
+  bub.innerHTML='<div class="ai-typing2"><span></span><span></span><span></span></div>';
+  div.appendChild(av);div.appendChild(bub);
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+  return div;
+}
+
+async function sendAIChat(){
+  const inp=document.getElementById('aiChatInput');
+  const text=inp.value.trim();
+  if(!text||aiChatBusy) return;
+  inp.value='';inp.style.height='';
+  sendAIChatMsg(text);
+}
+
+async function sendAIChatMsg(text){
+  if(aiChatBusy) return;
+  appendAIMsg2('user',text);
+  aiChatHist.push({role:'user',content:text});
+  const typEl=appendTyping2();
+  aiChatBusy=true;
+  try{
+    // Build context
+    const f1rooms=state.rooms[1].map(r=>r.label+'('+r.w+'×'+r.h+')').join('、');
+    const f2rooms=state.rooms[2].map(r=>r.label+'('+r.w+'×'+r.h+')').join('、');
+    const ctx=`【現在の間取り】\nモジュール:${MODULE}mm\n1階:${f1rooms||'未設定'}\n2階:${f2rooms||'未設定'}\n`;
+    const hist=aiChatHist.slice(-6).map(h=>h.role+': '+h.content).join('\n');
+    const sys='あなたは日本の木造住宅専門の建築士AIです。間取り・法規・動線・コスト等について実践的に回答してください。数値根拠・法令根拠も示してください。\n'+ctx;
+    const resp=await callGemini(sys+'\n\n会話:\n'+hist+'\n\nユーザー: '+text, false);
+    typEl.remove();
+    aiChatHist.push({role:'assistant',content:resp});
+    appendAIMsg2('bot',resp);
+  }catch(e){
+    typEl.remove();
+    appendAIMsg2('bot','⚠️ エラー: '+e.message);
+  }
+  aiChatBusy=false;
+}
+
+// ============================================================
+//  VOICE INPUT
+// ============================================================
+var voiceRec=null,voiceActive=false,voiceTarget='',voiceBtnId='';
+
+function startVoice(targetId,btnId){
+  if(!('webkitSpeechRecognition'in window||'SpeechRecognition'in window)){
+    toast('このブラウザは音声入力非対応（Chrome推奨）');return;
+  }
+  if(voiceActive){voiceRec?.stop();return;}
+  voiceTarget=targetId;voiceBtnId=btnId;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  voiceRec=new SR();
+  voiceRec.lang='ja-JP';voiceRec.continuous=false;voiceRec.interimResults=true;
+  voiceRec.onstart=()=>{
+    voiceActive=true;
+    const b=document.getElementById(btnId);
+    if(b){b.classList.add('rec');b.textContent='⏹';}
+    toast('🎤 音声入力中...');
+  };
+  voiceRec.onresult=e=>{
+    const text=Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById(voiceTarget).value=text;
+  };
+  voiceRec.onend=()=>{
+    voiceActive=false;
+    const b=document.getElementById(voiceBtnId);
+    if(b){b.classList.remove('rec');b.textContent='🎤';}
+    toast('音声入力完了');
+  };
+  voiceRec.start();
+}
+
+// ============================================================
+//  QUICK PROMPTS
+// ============================================================
+function appendPrompt1(text){
+  const ta=document.getElementById('prompt1');
+  ta.value=(ta.value?ta.value+'、':'')+text;
+}
+function appendPrompt2(text){
+  const ta=document.getElementById('prompt2');
+  ta.value=(ta.value?ta.value+'、':'')+text;
+}
+
+// ============================================================
+//  LOADING / TOAST
+// ============================================================
+function showLoading(text,sub){
+  document.getElementById('loadingText').textContent=text||'処理中...';
+  document.getElementById('loadingSub').textContent=sub||'';
+  document.getElementById('loading').classList.add('active');
+}
+function hideLoading(){document.getElementById('loading').classList.remove('active');}
+
+var toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  buildRoomGrids();
+  updatePreflight();
+  // Render empty lists
+  [1,2].forEach(f=>renderLayoutList(f));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>AI図面Pro v12</title>
+<style>
+:root{--bg:#F0F6FF;--card:#FFF;--a:#0E5EA8;--a2:#087840;--tx:#0C1E30;--tx3:#4A6A88;--bdr:#A8C4DE;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'Hiragino Kaku Gothic ProN',Meiryo,sans-serif;font-size:13px;display:flex;flex-direction:column;}
+/* LOGIN */
+#LS{display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(145deg,#08192a,#124068);align-items:center;justify-content:center;padding:20px;}
+#LS.on{display:flex;}
+.lcard{background:#fff;border-radius:18px;padding:28px 22px;width:min(360px,100%);box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.ll{text-align:center;margin-bottom:18px;}.ll .li{font-size:44px;display:block;margin-bottom:6px;}
+.ll h1{font-size:17px;font-weight:700;}.ll p{font-size:11px;color:var(--tx3);margin-top:3px;}
+.lf{margin-bottom:11px;}.lf label{display:block;font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:3px;}
+.lf input{width:100%;padding:10px 12px;border:2px solid var(--bdr);border-radius:7px;font-size:15px;outline:none;background:#f0f8ff;font-family:inherit;}
+.lf input:focus{border-color:var(--a);}
+.lbtn{width:100%;padding:12px;background:linear-gradient(135deg,#0e5ea8,#083878);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;}
+.lerr{color:#981808;font-size:11px;text-align:center;margin-top:7px;min-height:14px;}
+/* HEADER */
+#HD{display:none;background:linear-gradient(135deg,#1A3A5C,#0D5C8A);color:#c0deff;height:46px;align-items:center;padding:0 8px;gap:6px;flex-shrink:0;}
+#HD.on{display:flex;}
+.logo{font-size:12px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;}
+.undoBtn{background:rgba(200,60,16,.35);border:1.5px solid rgba(255,120,60,.5);color:#ffaa80;font-size:18px;font-weight:900;padding:2px 10px;border-radius:9px;cursor:pointer;flex-shrink:0;}
+.modeSW{display:flex;border:1.5px solid rgba(255,255,255,.3);border-radius:11px;overflow:hidden;flex-shrink:0;}
+.modeB{padding:4px 9px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
+.modeB.on{background:rgba(255,255,255,.25);color:#fff;}
+.hdBtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#c0deff;font-size:11px;padding:4px 8px;border-radius:9px;cursor:pointer;flex-shrink:0;}
+/* AI BAR */
+#AIB{display:none;background:linear-gradient(135deg,#eef6ff,#e4f0fa);border-bottom:2px solid var(--bdr);padding:6px 8px;flex-shrink:0;}
+#AIB.on{display:block;}
+.aib-modes{display:flex;gap:3px;margin-bottom:5px;}
+.aib-mode{padding:3px 9px;border:1.5px solid var(--bdr);border-radius:9px;background:#fff;color:var(--tx3);font-size:10px;font-weight:700;cursor:pointer;}
+.aib-mode.on{background:var(--a);color:#fff;border-color:var(--a);}
+.aib-row{display:flex;gap:5px;align-items:flex-end;margin-bottom:4px;}
+.aib-ta{flex:1;background:#fff;border:1.5px solid var(--bdr);border-radius:7px;padding:6px 8px;font-size:13px;resize:none;outline:none;min-height:34px;max-height:68px;font-family:inherit;}
+.aib-ta:focus{border-color:var(--a);}
+.aib-btns{display:flex;flex-direction:column;gap:3px;}
+.aibBtn{padding:5px 10px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;color:#fff;}
+.aibBtn.gen{background:linear-gradient(135deg,#0e5ea8,#083878);}
+.aibBtn.srch{background:linear-gradient(135deg,#087840,#055028);}
+.aib-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}
+.aib-tag{padding:3px 8px;border:1px solid var(--bdr);border-radius:9px;background:#fff;color:var(--tx3);font-size:10px;cursor:pointer;}
+.aib-tag:active{background:var(--a);color:#fff;}
+.aib-url{display:none;gap:4px;margin-bottom:4px;}
+.aib-url.on{display:flex;}
+.aib-url input{flex:1;padding:5px 8px;border:1.5px solid var(--bdr);border-radius:6px;font-size:12px;outline:none;background:#fff;}
+/* CANVAS AREA */
+#CA{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+/* TOOLBAR */
+#TB{background:#fff;border-bottom:2px solid var(--bdr);padding:4px 6px;display:flex;gap:3px;flex-wrap:nowrap;overflow-x:auto;align-items:center;flex-shrink:0;scrollbar-width:none;}
+#TB::-webkit-scrollbar{display:none;}
+.tb{padding:4px 8px;border:1.5px solid var(--bdr);border-radius:10px;background:#f0f8ff;color:var(--tx3);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.tb.on{border-color:var(--a);background:#ddeeff;color:var(--a);}
+.fsw{display:flex;border:1.5px solid var(--bdr);border-radius:10px;overflow:hidden;flex-shrink:0;}
+.fswb{padding:3px 8px;border:none;background:#f0f8ff;color:var(--tx3);font-size:10px;font-weight:700;cursor:pointer;}
+.fswb.on{background:var(--a);color:#fff;}
+/* CANVAS WRAP */
+#CW{flex:1;position:relative;overflow:hidden;touch-action:none;background:#fff;}
+canvas{display:block;}
+.cv-sb{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.9);border:1px solid var(--bdr);border-radius:9px;padding:3px 10px;font-size:9px;font-family:'Share Tech Mono',monospace;color:var(--tx3);pointer-events:none;}
+.cv-hint{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(14,60,110,.82);color:#fff;border-radius:10px;padding:4px 12px;font-size:11px;pointer-events:none;display:none;white-space:nowrap;z-index:10;}
+.zbtnW{position:absolute;bottom:36px;right:10px;display:flex;flex-direction:column;gap:4px;}
+.zbtn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--bdr);background:rgba(255,255,255,.92);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+/* PALETTE */
+#QP{background:#fff;border-top:2px solid var(--bdr);flex-shrink:0;transition:max-height .3s;overflow:hidden;max-height:120px;}
+#QP.collapsed{max-height:34px;}
+#qpHd{display:flex;align-items:center;padding:5px 10px;cursor:pointer;height:34px;background:linear-gradient(135deg,#eef6ff,#e4f0fa);border-bottom:1px solid var(--bdr);user-select:none;}
+.qhT{font-size:11px;font-weight:700;color:var(--a);flex:1;}
+.qhA{font-size:12px;color:var(--a);transition:transform .3s;}
+#QP.collapsed .qhA{transform:rotate(180deg);}
+#qpCats{display:flex;overflow-x:auto;scrollbar-width:none;background:#fff;flex-shrink:0;border-bottom:1px solid var(--bdr);}
+#qpCats::-webkit-scrollbar{display:none;}
+.qpcat{flex-shrink:0;padding:4px 11px;font-size:10px;font-weight:700;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+.qpcat.on{color:var(--a);border-bottom-color:var(--a);background:#eef6ff;}
+#qpGrid{display:flex;gap:6px;padding:7px 9px 9px;overflow-x:auto;scrollbar-width:none;}
+#qpGrid::-webkit-scrollbar{display:none;}
+.qpChip{flex-shrink:0;width:68px;height:72px;border:2px solid var(--bdr);border-radius:11px;background:#f0f8ff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;gap:2px;touch-action:none;user-select:none;position:relative;transition:transform .12s;}
+.qpChip::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:9px 9px 0 0;background:var(--cc,var(--bdr));}
+.qpChip.held{border-color:var(--a);background:#ddeeff;transform:scale(1.08);box-shadow:0 6px 20px rgba(14,90,168,.4);}
+.qpChip.placed{border-color:var(--a2);background:#e0fef0;}
+.qpi{font-size:22px;line-height:1;}
+.qpl{font-size:9px;font-weight:700;color:var(--tx3);text-align:center;line-height:1.2;}
+.qpsz{font-size:8px;color:var(--tx3);font-family:'Share Tech Mono',monospace;}
+/* ROOM MODAL */
+#RM{display:none;position:fixed;inset:0;z-index:800;background:rgba(8,20,36,.65);align-items:flex-end;backdrop-filter:blur(3px);}
+#RM.on{display:flex;}
+.rmin{background:#fff;border-radius:18px 18px 0 0;width:100%;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom));max-height:88dvh;overflow-y:auto;}
+.rmT{font-size:15px;font-weight:700;color:var(--a);margin-bottom:14px;}
+.rmF{margin-bottom:10px;}.rmF label{display:block;font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px;}
+.rmF input,.rmF select{width:100%;padding:9px 11px;border:2px solid var(--bdr);border-radius:8px;font-size:15px;outline:none;font-family:inherit;background:#f0f8ff;}
+.rmF input:focus,.rmF select:focus{border-color:var(--a);}
+.rm2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rmArea{background:#eef6ff;border-radius:8px;padding:8px 11px;font-size:12px;color:var(--a);font-family:'Share Tech Mono',monospace;margin-bottom:10px;}
+.rmBtns{display:flex;gap:8px;}
+.rmCancel{flex:1;padding:12px;background:#f0f8ff;border:2px solid var(--bdr);border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;color:var(--tx3);}
+.rmApply{flex:2;padding:12px;background:linear-gradient(135deg,#0e5ea8,#083878);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;}
+/* DRAG GHOST */
+#dgh{display:none;position:fixed;z-index:9800;pointer-events:none;background:#fff;border:2.5px solid var(--a);border-radius:12px;padding:8px 11px;text-align:center;min-width:60px;box-shadow:0 10px 28px rgba(14,60,110,.45);transform:translate(-50%,-150%);}
+#dgh.on{display:block;}
+.dgi{font-size:22px;display:block;}.dgl{font-size:11px;font-weight:700;color:var(--tx);}.dgs{font-size:9px;color:var(--a);font-family:'Share Tech Mono',monospace;}
+#CW.drop-ready{outline:3px dashed var(--a);outline-offset:-3px;background:#eef6ff!important;}
+/* EDGE MENU */
+#EM{display:none;position:fixed;z-index:700;background:#fff;border:1.5px solid var(--bdr);border-radius:12px;padding:6px;box-shadow:0 4px 18px rgba(14,60,110,.25);}
+#EM.on{display:flex;gap:5px;}
+.emBtn{padding:7px 10px;border:1.5px solid var(--bdr);border-radius:8px;background:#f0f8ff;font-size:12px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.emBtn:active{background:var(--a);color:#fff;border-color:var(--a);}
+.emI{font-size:18px;}.emL{font-size:9px;}
+/* AI CHAT */
+#AIP{display:none;position:fixed;inset:0;z-index:700;align-items:flex-end;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);}
+#AIP.on{display:flex;}
+.aipin{background:#fff;border-radius:18px 18px 0 0;width:100%;max-height:70dvh;display:flex;flex-direction:column;padding-bottom:max(8px,env(safe-area-inset-bottom));}
+.aiphd{background:linear-gradient(135deg,#124068,#0a2848);color:#c0deff;padding:9px 12px;border-radius:18px 18px 0 0;display:flex;align-items:center;gap:7px;}
+.aiphd h3{font-size:13px;font-weight:700;flex:1;}
+.aiMsgs{flex:1;overflow-y:auto;padding:7px 10px;display:flex;flex-direction:column;gap:6px;background:var(--bg);}
+.amsg{display:flex;gap:5px;}.amsg.u{flex-direction:row-reverse;}
+.abub{max-width:88%;padding:7px 11px;border-radius:12px;font-size:12px;line-height:1.65;white-space:pre-wrap;}
+.amsg.b .abub{background:#fff;border:1px solid var(--bdr);border-radius:4px 12px 12px 12px;}
+.amsg.u .abub{background:linear-gradient(135deg,#124068,#083858);color:#fff;border-radius:12px 4px 12px 12px;}
+.aiInp{display:flex;gap:5px;padding:6px 9px;border-top:1px solid var(--bdr);background:#fff;}
+.aiTa{flex:1;background:#f0f8ff;border:1.5px solid var(--bdr);border-radius:8px;padding:6px 9px;font-size:13px;resize:none;outline:none;max-height:68px;min-height:34px;font-family:inherit;}
+.aiSend{background:linear-gradient(135deg,var(--a),#083878);color:#fff;border:none;border-radius:8px;width:40px;height:40px;font-size:16px;cursor:pointer;}
+/* WIZARD */
+#WZ{display:none;position:fixed;inset:0;z-index:9600;background:linear-gradient(145deg,#08192a,#124068);align-items:center;justify-content:center;padding:20px;}
+#WZ.on{display:flex;}
+.wzCard{background:#fff;border-radius:20px;width:min(380px,100%);overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.wzProg{height:4px;background:#e0eaf4;}.wzBar{height:4px;background:linear-gradient(90deg,var(--a),#0090d0);transition:width .4s;}
+.wzDots{display:flex;gap:6px;justify-content:center;padding:14px 0 0;}
+.wzDot{width:8px;height:8px;border-radius:50%;background:var(--bdr);transition:all .2s;}
+.wzDot.on{background:var(--a);width:20px;border-radius:4px;}
+.wzStep{display:none;padding:20px;}.wzStep.on{display:block;}
+.wzIco{font-size:46px;text-align:center;display:block;margin-bottom:10px;}
+.wzTitle{font-size:18px;font-weight:700;text-align:center;margin-bottom:6px;}
+.wzSub{font-size:12px;color:var(--tx3);text-align:center;line-height:1.7;margin-bottom:14px;}
+.wzBTypes{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}
+.wzBT{padding:10px 5px;border:2px solid var(--bdr);border-radius:11px;background:#f0f8ff;cursor:pointer;text-align:center;}
+.wzBT.on{border-color:var(--a);background:#ddeeff;}
+.wzBT .wbi{font-size:22px;display:block;margin-bottom:3px;}
+.wzBT .wbl{font-size:9px;font-weight:700;color:var(--tx3);}
+.wz2col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.wzF{margin-bottom:10px;}.wzF label{display:block;font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px;}
+.wzF input,.wzF select{width:100%;padding:10px 12px;border:2px solid var(--bdr);border-radius:9px;font-size:15px;outline:none;font-family:'Share Tech Mono',monospace;background:#f0f8ff;}
+.wzCalc{background:#eef6ff;border-radius:7px;padding:8px 10px;font-size:12px;color:var(--a);margin-bottom:10px;font-family:'Share Tech Mono',monospace;}
+.wzNext{width:100%;padding:13px;background:linear-gradient(135deg,var(--a),#083878);color:#fff;border:none;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;}
+.wzSkip{width:100%;padding:7px;background:none;border:none;color:var(--tx3);font-size:12px;cursor:pointer;margin-top:4px;}
+.wzTips{background:#f0fff4;border:2px solid #a0e0b0;border-radius:11px;padding:12px;margin-bottom:12px;}
+.wzTips h4{font-size:12px;font-weight:700;color:var(--a2);margin-bottom:8px;}
+.wzTips p{font-size:12px;color:#1a4028;line-height:2.2;}
+/* FLASH TOAST LOAD */
+#snapF{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:var(--a2);color:#fff;border-radius:18px;padding:7px 18px;font-size:12px;font-weight:700;z-index:9900;pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;}
+#snapF.on{opacity:1;}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(60px);background:#0c1e30;color:#c0deff;border-radius:15px;padding:7px 16px;font-size:12px;font-weight:600;z-index:9500;transition:transform .22s;white-space:nowrap;}
+#toast.on{transform:translateX(-50%) translateY(0);}
+#LD{display:none;position:fixed;inset:0;background:rgba(8,18,30,.86);z-index:9200;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(4px);}
+#LD.on{display:flex;}
+.lr{width:48px;height:48px;border:4px solid rgba(255,255,255,.1);border-top-color:#40c8ff;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lt{color:#70d8ff;font-size:13px;font-weight:600;}.ls{color:#4078a0;font-size:11px;}
+</style>
+</head>
+<body>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import{getFirestore,doc,setDoc,getDoc,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const cfg={apiKey:"AIzaSyCVk2miG5TK1ffTofXLh0hHgeSbOvmIgZ8",authDomain:"kensetsu-nippo-842a2.firebaseapp.com",projectId:"kensetsu-nippo-842a2",storageBucket:"kensetsu-nippo-842a2.firebasestorage.app",messagingSenderId:"702880974315",appId:"1:702880974315:web:985321dc9180046629c5ae"};
+const app=initializeApp(cfg);
+window.__fb={auth:getAuth(app),db:getFirestore(app),signInWithEmailAndPassword,signOut,onAuthStateChanged,doc,setDoc,getDoc,serverTimestamp};
+window.dispatchEvent(new Event('fbReady'));
+</script>
+<script>function fb(){return window.__fb;}</script>
+
+<!-- LOGIN -->
+<div id="LS" class="on">
+  <div class="lcard">
+    <div class="ll"><span class="li">🏗️</span><h1>AI図面Pro v12</h1><p>世界初 直感ツーモード建築CAD</p></div>
+    <div class="lf"><label>メールアドレス</label><input type="email" id="lE" autocomplete="email" placeholder="example@company.com"></div>
+    <div class="lf"><label>パスワード</label><input type="password" id="lP" autocomplete="current-password" placeholder="パスワード"></div>
+    <div class="lerr" id="lErr"></div>
+    <button class="lbtn" onclick="doLogin()">🔑 ログイン</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div id="HD">
+  <span class="logo">🏗️ AI図面Pro v12</span>
+  <button class="undoBtn" onclick="undo()" title="元に戻す">↩</button>
+  <div class="modeSW">
+    <button class="modeB on" id="mS" onclick="setMode('sketch')">🖊️スケッチ</button>
+    <button class="modeB" id="mC" onclick="setMode('cad')">📐CAD</button>
+  </div>
+  <button class="hdBtn" onclick="openAI()">🤖</button>
+  <button class="hdBtn" onclick="doLogout()">退出</button>
+</div>
+
+<!-- AI BAR -->
+<div id="AIB">
+  <div class="aib-modes">
+    <button class="aib-mode on" id="am0" onclick="setAibMode(0)">🏠 間取り</button>
+    <button class="aib-mode" id="am1" onclick="setAibMode(1)">🔍 検索+AI</button>
+    <button class="aib-mode" id="am2" onclick="setAibMode(2)">🌐 URL参照</button>
+  </div>
+  <div class="aib-row">
+    <textarea class="aib-ta" id="aibTA" rows="1" placeholder="例：南向き3LDK…" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,68)+'px';"></textarea>
+    <div class="aib-btns">
+      <button class="aibBtn gen" onclick="aibGo(false)">✨ 生成</button>
+      <button class="aibBtn srch" onclick="aibGo(true)">🔍+AI</button>
+    </div>
+  </div>
+  <div class="aib-url" id="aibUrlRow">
+    <input type="url" id="aibUrl" placeholder="https://... 参照URL">
+    <button class="aibBtn gen" style="white-space:nowrap;padding:5px 10px;" onclick="aibUrlGo()">🌐参照</button>
+  </div>
+  <div class="aib-tags" id="aibTags"></div>
+</div>
+
+<!-- CANVAS AREA -->
+<div id="CA">
+  <div id="TB">
+    <div class="fsw" id="floorSW"></div>
+    <div id="tbSketch">
+      <button class="tb on" id="t_finger" onclick="setTool('finger')" style="margin-left:4px;">👆なぞる</button>
+      <button class="tb" id="t_ssel" onclick="setTool('ssel')">↖選択</button>
+    </div>
+    <div id="tbCAD" style="display:none;margin-left:4px;">
+      <button class="tb on" id="t_sel" onclick="setTool('sel')">↖選択</button>
+      <button class="tb" id="t_wall" onclick="setTool('wall')">▬壁</button>
+      <button class="tb" id="t_open" onclick="setTool('open')">🚪開口</button>
+      <button class="tb" id="t_col" onclick="setTool('col')">⬛柱</button>
+      <button class="tb" id="t_del" onclick="setTool('del')" style="color:#981818;border-color:#d08080;">🗑</button>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:3px;flex-shrink:0;">
+      <button class="tb" onclick="resetView()">↺</button>
+      <button class="tb" onclick="saveLocal()" style="border-color:var(--a2);color:var(--a2);">💾</button>
+    </div>
+  </div>
+  <div id="CW">
+    <canvas id="CV"></canvas>
+    <div class="cv-sb" id="cvSB">スケッチ | 1F | 1:100</div>
+    <div class="cv-hint" id="cvHint"></div>
+    <div class="zbtnW">
+      <button class="zbtn" onclick="zb(1.25)">＋</button>
+      <button class="zbtn" onclick="zb(.8)">－</button>
+    </div>
+  </div>
+  <div id="QP" class="collapsed">
+    <div id="qpHd" onclick="toggleQP()">
+      <span class="qhT">🏠 部品パレット — 長押しでドラッグ&ドロップ</span>
+      <span class="qhA">▲</span>
+    </div>
+    <div id="qpCats"></div>
+    <div id="qpGrid"></div>
+  </div>
+</div>
+
+<!-- ROOM MODAL -->
+<div id="RM">
+  <div class="rmin">
+    <div class="rmT">🏠 部屋を設定</div>
+    <div class="rmF"><label>部屋名</label><input type="text" id="rm_name" placeholder="リビング"></div>
+    <div class="rm2">
+      <div class="rmF"><label>幅 (mm)</label><input type="number" id="rm_w" inputmode="decimal" step="900" oninput="rmCalc()"></div>
+      <div class="rmF"><label>奥行 (mm)</label><input type="number" id="rm_h" inputmode="decimal" step="900" oninput="rmCalc()"></div>
+    </div>
+    <div class="rmArea" id="rmArea">面積: — ㎡ / — 帖</div>
+    <div class="rmF"><label>床仕上げ</label>
+      <select id="rm_yuka"><option>フローリング(オーク)</option><option>フローリング(チェリー)</option><option>畳</option><option>タイル</option><option>クッションフロア</option><option>カーペット</option></select></div>
+    <div class="rmF"><label>壁仕上げ</label>
+      <select id="rm_kabe"><option>ビニルクロス(白)</option><option>ビニルクロス(淡色)</option><option>珪藻土</option><option>タイル</option><option>AEP塗装</option></select></div>
+    <div class="rmF"><label>天井仕上げ</label>
+      <select id="rm_tenjo"><option>クロス(白)</option><option>木目クロス</option><option>化粧梁露し</option><option>岩綿吸音板</option></select></div>
+    <div class="rmBtns">
+      <button class="rmCancel" onclick="closeRM()">キャンセル</button>
+      <button class="rmApply" onclick="applyRM()">✅ 適用する</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDGE MENU -->
+<div id="EM">
+  <button class="emBtn" onclick="insertEdge('door_in')"><span class="emI">🚪</span><span class="emL">ドア</span></button>
+  <button class="emBtn" onclick="insertEdge('sash')"><span class="emI">🪟</span><span class="emL">窓</span></button>
+  <button class="emBtn" onclick="insertEdge('shutter')"><span class="emI">🔳</span><span class="emL">シャッター</span></button>
+  <button class="emBtn" onclick="document.getElementById('EM').classList.remove('on')"><span class="emI">✕</span><span class="emL">閉じる</span></button>
+</div>
+
+<!-- DRAG GHOST -->
+<div id="dgh"><span class="dgi" id="dghI">🏠</span><span class="dgl" id="dghL"></span><span class="dgs" id="dghS"></span></div>
+
+<!-- AI CHAT -->
+<div id="AIP">
+  <div class="aipin">
+    <div class="aiphd">
+      <span>🤖</span><h3>AI建築士</h3>
+      <button onclick="document.getElementById('AIP').classList.remove('on')" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:50%;font-size:14px;cursor:pointer;margin-left:auto;">✕</button>
+    </div>
+    <div class="aiMsgs" id="aiMsgs">
+      <div class="amsg b"><div class="abub">こんにちは！建築に関する質問・間取り相談・法規確認など何でもどうぞ。</div></div>
+    </div>
+    <div class="aiInp">
+      <textarea class="aiTa" id="aiTA" rows="1" placeholder="質問を入力…" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,68)+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend();}"></textarea>
+      <button class="aiSend" onclick="aiSend()">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- WIZARD -->
+<div id="WZ">
+  <div class="wzCard">
+    <div class="wzProg"><div class="wzBar" id="wzBar" style="width:33%"></div></div>
+    <div style="padding:12px 20px 0;"><div class="wzDots"><div class="wzDot on" id="wd0"></div><div class="wzDot" id="wd1"></div><div class="wzDot" id="wd2"></div></div></div>
+    <div class="wzStep on" id="ws0">
+      <span class="wzIco">🏗️</span>
+      <div class="wzTitle">建物タイプを選択</div>
+      <div class="wzSub">設計する建物を選んでください</div>
+      <div class="wzBTypes">
+        <div class="wzBT on" id="wbt_1f" onclick="wzSelType('1f')"><span class="wbi">🏠</span><div class="wbl">1階建て（平屋）</div></div>
+        <div class="wzBT" id="wbt_2f" onclick="wzSelType('2f')"><span class="wbi">🏡</span><div class="wbl">2階建て</div></div>
+        <div class="wzBT" id="wbt_3f" onclick="wzSelType('3f')"><span class="wbi">🏢</span><div class="wbl">3階建て</div></div>
+        <div class="wzBT" id="wbt_3f_roof" onclick="wzSelType('3f_roof')"><span class="wbi">🌇</span><div class="wbl">3F+塔屋付き</div></div>
+      </div>
+      <button class="wzNext" onclick="wzNext()">次へ →</button>
+      <button class="wzSkip" onclick="wzSkip()">スキップして使い始める</button>
+    </div>
+    <div class="wzStep" id="ws1">
+      <span class="wzIco">📐</span>
+      <div class="wzTitle">建物のサイズ</div>
+      <div class="wzSub">外壁の幅と奥行き（mm）を入力</div>
+      <div class="wz2col">
+        <div class="wzF"><label>幅 (mm)</label><input type="number" id="wzW" value="10800" step="900" oninput="wzCalc()"></div>
+        <div class="wzF"><label>奥行 (mm)</label><input type="number" id="wzD" value="8100" step="900" oninput="wzCalc()"></div>
+      </div>
+      <div class="wzF"><label>モジュール</label><select id="wzMod"><option value="900">900mm（尺モジュール）</option><option value="910">910mm</option><option value="1000">1000mm（メーター）</option></select></div>
+      <div class="wzCalc" id="wzCalcD">10800×8100mm ≈ 26.4坪</div>
+      <button class="wzNext" onclick="wzNext()">次へ →</button>
+    </div>
+    <div class="wzStep" id="ws2">
+      <span class="wzIco">🚀</span>
+      <div class="wzTitle">準備完了！</div>
+      <div class="wzTips">
+        <h4>🎯 最初の3ステップ</h4>
+        <p><b>① 下パレットの部屋を長押し</b>してドラッグ<br><b>② 「👆なぞる」で指をなぞって</b>部屋を作成<br><b>③ 部屋をタップ</b>して名前・寸法・仕上げを編集</p>
+      </div>
+      <button class="wzNext" onclick="wzFinish()" style="background:linear-gradient(135deg,#087840,#055028);">🏗️ 設計をスタート！</button>
+    </div>
+  </div>
+</div>
+
+<div id="snapF">✅ 配置しました</div>
+<div id="toast"></div>
+<div id="LD"><div class="lr"></div><div class="lt" id="lt">処理中…</div><div class="ls" id="ls"></div></div>
+
+<script>
+// ═══════════════════════════════════════
+// FIREBASE / GEMINI
+// ═══════════════════════════════════════
+var FB_BASE=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ?'http://localhost:5001/kensetsu-nippo-842a2/us-central1'
+  :'https://us-central1-kensetsu-nippo-842a2.cloudfunctions.net';
+
+async function callGemini(prompt,useSearch,urls){
+  useSearch=useSearch||false;urls=urls||[];
+  const r=await fetch(FB_BASE+'/askClaude',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt,model:'gemini-2.5-flash',useSearch,urls:urls.length?urls:undefined}),
+    signal:AbortSignal.timeout(60000),
+  });
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();
+  return d?.candidates?.[0]?.content?.parts?.[0]?.text||d?.text||d?.result||'応答なし';
+}
+
+// ═══════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════
+window.addEventListener('fbReady',()=>{
+  fb().onAuthStateChanged(fb().auth,u=>{
+    if(u){showApp();}else{showLogin();}
+  });
+});
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('lP').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  document.getElementById('lE').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('lP').focus();});
+});
+function showApp(){
+  document.getElementById('LS').classList.remove('on');
+  document.getElementById('HD').classList.add('on');
+  document.getElementById('AIB').classList.add('on');
+  document.getElementById('CA').style.display='flex';
+  document.getElementById('CA').style.flexDirection='column';
+  document.getElementById('CA').style.flex='1';
+  setTimeout(()=>{
+    resizeCV();buildFloorSW();buildQP();setMode('sketch');setAibMode(0);renderCV();
+    if(!localStorage.getItem('wz_done'))document.getElementById('WZ').classList.add('on');
+    else document.getElementById('QP').classList.remove('collapsed');
+  },80);
+}
+function showLogin(){
+  document.getElementById('LS').classList.add('on');
+  document.getElementById('HD').classList.remove('on');
+  document.getElementById('AIB').classList.remove('on');
+}
+async function doLogin(){
+  const e=document.getElementById('lE').value.trim(),p=document.getElementById('lP').value;
+  const err=document.getElementById('lErr');err.textContent='';
+  if(!e||!p){err.textContent='入力してください';return;}
+  try{await fb().signInWithEmailAndPassword(fb().auth,e,p);}
+  catch(ex){const m={'auth/invalid-credential':'メール/パスワードが違います','auth/too-many-requests':'しばらくお待ちください'};err.textContent=m[ex.code]||'ログイン失敗';}
+}
+async function doLogout(){if(confirm('ログアウトしますか？'))await fb().signOut(fb().auth);}
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+var BLDG_TYPES={
+  '1f':{label:'1階建て',floors:[1],icon:'🏠'},
+  '2f':{label:'2階建て',floors:[1,2],icon:'🏡'},
+  '3f':{label:'3階建て',floors:[1,2,3],icon:'🏢'},
+  '3f_roof':{label:'3F+塔屋',floors:[1,2,3,'R'],icon:'🌇'},
+};
+var BLDG_TYPE='2f';
+var ST={
+  mode:'sketch',floor:1,
+  bldg:{w:10800,d:8100,h:2800},mod:900,
+  rooms:{1:[],2:[],3:[],R:[]},
+  walls:{1:[],2:[],3:[],R:[]},
+  openings:{1:[],2:[],3:[],R:[]},
+  columns:{1:[],2:[],3:[],R:[]},
+  labels:{1:[],2:[],3:[],R:[]},
+  axes:{x:[],y:[]},
+  vx:40,vy:40,sc:1,mp:12,
+  tool:'finger',
+  selId:null,selType:null,
+  locked:new Set(),nid:1,
+};
+var HIST=[];
+var WALL_TYPES={
+  gaiheki:{label:'外壁',thick:150,stroke:'#1a2830',fill:'rgba(58,80,96,.55)'},
+  naiheki:{label:'内壁',thick:120,stroke:'#2a3840',fill:'rgba(74,96,112,.45)'},
+  kajiri:{label:'間仕切',thick:90,stroke:'#3a4850',fill:'rgba(90,112,128,.35)'},
+};
+var WTYPE='gaiheki';
+var COL_SIZE=105;
+
+// ═══════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════
+function pushHist(){
+  HIST.push(JSON.stringify({
+    rooms:ST.rooms,walls:ST.walls,openings:ST.openings,
+    columns:ST.columns,labels:ST.labels,axes:ST.axes
+  }));
+  if(HIST.length>40)HIST.shift();
+}
+function undo(){
+  if(!HIST.length){toast('これ以上戻せません');return;}
+  const p=JSON.parse(HIST.pop());
+  ST.rooms=p.rooms;ST.walls=p.walls;ST.openings=p.openings;
+  ST.columns=p.columns;ST.labels=p.labels;ST.axes=p.axes;
+  ST.selId=null;ST.selType=null;
+  renderCV();toast('↩ 元に戻しました');
+}
+
+// ═══════════════════════════════════════
+// MODE
+// ═══════════════════════════════════════
+function setMode(m){
+  ST.mode=m;
+  document.getElementById('mS').classList.toggle('on',m==='sketch');
+  document.getElementById('mC').classList.toggle('on',m==='cad');
+  document.getElementById('tbSketch').style.display=m==='sketch'?'contents':'none';
+  document.getElementById('tbCAD').style.display=m==='cad'?'inline-flex':'none';
+  document.getElementById('CW').style.background=m==='sketch'?'#fff':'#F4F8FF';
+  if(m==='sketch'){setTool('finger');}else{setTool('sel');}
+  renderCV();
+}
+
+// ═══════════════════════════════════════
+// FLOOR
+// ═══════════════════════════════════════
+function setFloor(f){
+  ST.floor=isNaN(f)?f:parseInt(f);
+  ST.selId=null;ST.selType=null;
+  buildFloorSW();renderCV();
+}
+function buildFloorSW(){
+  const sw=document.getElementById('floorSW');if(!sw)return;
+  const floors=BLDG_TYPES[BLDG_TYPE].floors;
+  const clr={1:'',2:'',3:'background:linear-gradient(135deg,#5a0888,#3c0560);color:#fff',R:'background:linear-gradient(135deg,#c84010,#882808);color:#fff'};
+  sw.innerHTML=floors.map(f=>`<button class="fswb${ST.floor===f?' on':''}" onclick="setFloor('${f}')" style="${ST.floor===f?'':clr[f]||''}">${f==='R'?'RF':f+'F'}</button>`).join('');
+}
+
+// ═══════════════════════════════════════
+// CANVAS
+// ═══════════════════════════════════════
+var CV=document.getElementById('CV'),CX=CV.getContext('2d');
+function resizeCV(){
+  var cw=document.getElementById('CW');
+  CV.width=cw.clientWidth||window.innerWidth;
+  CV.height=cw.clientHeight||300;
+}
+window.addEventListener('resize',function(){resizeCV();renderCV();});
+
+function s2w(sx,sy){return{wx:(sx-ST.vx)/ST.sc*ST.mp,wy:(sy-ST.vy)/ST.sc*ST.mp};}
+function snapW(v){return Math.round(v/ST.mod)*ST.mod;}
+function wallLen(w){return Math.hypot(w.x2-w.x1,w.y2-w.y1);}
+function wallAngle(w){return Math.atan2(w.y2-w.y1,w.x2-w.x1);}
+
+function smartSnap(wx,wy){
+  var M=ST.mod,best=null,bd=200;
+  (ST.walls[ST.floor]||[]).forEach(function(w){
+    [[w.x1,w.y1],[w.x2,w.y2]].forEach(function(p){
+      var d=Math.hypot(wx-p[0],wy-p[1]);if(d<bd){bd=d;best={x:p[0],y:p[1]};}
+    });
+  });
+  if(best)return best;
+  return{x:Math.round(wx/M)*M,y:Math.round(wy/M)*M};
+}
+function orthoLock(sx,sy,wx,wy){
+  return Math.abs(wx-sx)>Math.abs(wy-sy)?{x:wx,y:sy}:{x:sx,y:wy};
+}
+
+// ═══════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════
+var ROOM_COLORS={
+  'リビング':'#fff8d8','LDK':'#fff8d8','ダイニング':'#f8ffe0','キッチン':'#e8ffe8',
+  '主寝室':'#e0e8ff','洋室':'#e0e8ff','和室':'#f8f0d8',
+  'トイレ':'#e8d8ff','UB':'#d0eeff','UB1616':'#d0eeff','UB1620':'#d0eeff','UB1818':'#d0eeff',
+  '洗面所':'#d8f8f0','脱衣所':'#fff0d8','玄関':'#e0ecf8','廊下':'#f8f4d8',
+  '階段':'#e8d8f8','ガレージ':'#d0d8e4','ガレージ2台':'#d0d8e4','ガレージ1台':'#d0d8e4',
+  'ベランダ':'#d0fce0','バルコニー':'#d8fce8','書斎':'#e0f0ff',
+};
+var ROOM_ICONS={
+  'リビング':'🛋️','LDK':'🍳','ダイニング':'🍽️','キッチン':'🔪',
+  '主寝室':'🛏️','洋室':'🛏️','和室':'🏯','トイレ':'🚽',
+  'UB':'🛁','UB1616':'🛁','UB1620':'🛁','UB1818':'🛁',
+  '洗面所':'🪥','脱衣所':'👕','玄関':'🚪','廊下':'⬌',
+  '階段':'🪜','ガレージ':'🚗','ガレージ2台':'🚗','ガレージ1台':'🚗',
+  'ベランダ':'🌿','バルコニー':'🌿','書斎':'📚','クローゼット':'👔',
+  '納戸':'📦','シューズクローク':'👟','ホール':'🔄',子供室:'🧒',
+  'サンルーム':'☀️','塔屋':'🏠','RFバルコニー':'🌇',
+};
+
+function renderCV(){
+  if(!CV||!CX)return;
+  CX.clearRect(0,0,CV.width,CV.height);
+  CX.save();CX.translate(ST.vx,ST.vy);CX.scale(ST.sc,ST.sc);
+  var mp=ST.mp,M=ST.mod;
+  var bW=ST.bldg.w/mp,bD=ST.bldg.d/mp;
+  // Background
+  CX.fillStyle='#c8d8e8';CX.fillRect(-ST.vx/ST.sc,-ST.vy/ST.sc,CV.width/ST.sc,CV.height/ST.sc);
+  CX.fillStyle=ST.mode==='sketch'?'#fff':'#F4F8FF';CX.fillRect(0,0,bW,bD);
+  // Grid
+  CX.strokeStyle='rgba(140,180,220,.25)';CX.lineWidth=.5/ST.sc;
+  for(var x=0;x<=ST.bldg.w;x+=M){CX.beginPath();CX.moveTo(x/mp,0);CX.lineTo(x/mp,bD);CX.stroke();}
+  for(var y=0;y<=ST.bldg.d;y+=M){CX.beginPath();CX.moveTo(0,y/mp);CX.lineTo(bW,y/mp);CX.stroke();}
+  // Border
+  CX.strokeStyle='#3a5a78';CX.lineWidth=2/ST.sc;CX.strokeRect(0,0,bW,bD);
+  // Axes
+  drawAxes(mp);
+  // Rooms
+  (ST.rooms[ST.floor]||[]).forEach(function(r){drawRoom(r,mp);});
+  // Columns
+  (ST.columns[ST.floor]||[]).forEach(function(c){drawCol(c,mp);});
+  // Walls
+  (ST.walls[ST.floor]||[]).forEach(function(w){drawWall(w,mp);});
+  // Openings
+  (ST.openings[ST.floor]||[]).forEach(function(o){drawOpening(o,mp);});
+  // Labels
+  (ST.labels[ST.floor]||[]).forEach(function(lb){drawLabel(lb,mp);});
+  // Trace
+  if(TRACE.on)drawTrace(mp);
+  // Wall preview
+  if(ST.tool==='wall'&&WALL_S&&MOUSE_W)drawWallPrev(mp);
+  // Compass
+  drawCompass();
+  CX.restore();
+  var sb=document.getElementById('cvSB');
+  if(sb)sb.textContent=(ST.mode==='sketch'?'🖊️スケッチ':'📐CAD')+' | '+(ST.floor==='R'?'RF':ST.floor+'F')+' | 1:'+(Math.round(ST.mp/ST.sc*100));
+}
+
+function drawAxes(mp){
+  var sc=ST.sc;
+  CX.font='bold '+(8/sc)+'px monospace';
+  ST.axes.x.forEach(function(ax,i){
+    CX.strokeStyle='rgba(180,80,30,.5)';CX.lineWidth=.6/sc;CX.setLineDash([6/sc,4/sc,2/sc,4/sc]);
+    CX.beginPath();CX.moveTo(ax.pos/mp,-16/sc);CX.lineTo(ax.pos/mp,ST.bldg.d/mp+16/sc);CX.stroke();CX.setLineDash([]);
+    CX.fillStyle='rgba(180,80,30,.85)';CX.beginPath();CX.arc(ax.pos/mp,-11/sc,5/sc,0,Math.PI*2);CX.fill();
+    CX.fillStyle='#fff';CX.textAlign='center';CX.textBaseline='middle';
+    CX.fillText(ax.label||String(i+1),ax.pos/mp,-11/sc);
+  });
+  ST.axes.y.forEach(function(ay,i){
+    CX.strokeStyle='rgba(30,100,180,.5)';CX.lineWidth=.6/sc;CX.setLineDash([6/sc,4/sc,2/sc,4/sc]);
+    CX.beginPath();CX.moveTo(-16/sc,ay.pos/mp);CX.lineTo(ST.bldg.w/mp+16/sc,ay.pos/mp);CX.stroke();CX.setLineDash([]);
+    CX.fillStyle='rgba(30,100,180,.85)';CX.beginPath();CX.arc(-11/sc,ay.pos/mp,5/sc,0,Math.PI*2);CX.fill();
+    CX.fillStyle='#fff';CX.textAlign='center';CX.textBaseline='middle';
+    CX.fillText(ay.label||String.fromCharCode(65+i),-11/sc,ay.pos/mp);
+  });
+}
+
+function drawRoom(r,mp){
+  var x=r.x/mp,y=r.y/mp,w=r.w/mp,h=r.h/mp;
+  var isSel=ST.selType==='room'&&ST.selId===r.id;
+  CX.fillStyle=r.color||(ROOM_COLORS[r.label]||'#e8f0f8');
+  CX.strokeStyle=isSel?'#0e5ea8':'#7898b8';
+  CX.lineWidth=(isSel?2.5:1.5)/ST.sc;
+  CX.shadowColor=isSel?'rgba(14,94,168,.3)':'rgba(0,0,0,.06)';
+  CX.shadowBlur=isSel?10:2;CX.shadowOffsetY=1;
+  CX.beginPath();CX.rect(x,y,w,h);CX.fill();CX.stroke();
+  CX.shadowColor='transparent';CX.shadowBlur=0;
+  // Wall hint
+  var ht=4/ST.sc;CX.fillStyle='rgba(80,120,160,.1)';
+  CX.fillRect(x,y,w,ht);CX.fillRect(x,y+h-ht,w,ht);CX.fillRect(x,y,ht,h);CX.fillRect(x+w-ht,y,ht,h);
+  // Icon
+  var isz=Math.min(w,h)*.28;
+  if(isz>3){
+    CX.font=isz+'px serif';CX.textAlign='center';CX.textBaseline='middle';
+    CX.fillText(r.icon||(ROOM_ICONS[r.label]||'🏠'),x+w/2,y+h/2-(isSel?12:8)/ST.sc);
+  }
+  // Label
+  var fs=Math.max(6,Math.min(12,w*.11));
+  CX.font='bold '+(fs/ST.sc)+'px Meiryo,sans-serif';
+  CX.fillStyle='#0e2030';CX.textAlign='center';CX.textBaseline='bottom';
+  if(w>36/ST.sc)CX.fillText(r.label,x+w/2,y+h-2/ST.sc);
+  if(r.area&&w>50/ST.sc){
+    CX.font=(Math.max(6,fs*.82)/ST.sc)+'px monospace';CX.fillStyle='#2a6888';
+    CX.fillText(r.area+'㎡',x+w/2,y+h-fs/ST.sc-2/ST.sc);
+  }
+  if(isSel){
+    CX.fillStyle='#0e5ea8';CX.beginPath();CX.arc(x+w,y+h,5/ST.sc,0,Math.PI*2);CX.fill();
+    CX.font='bold '+(8/ST.sc)+'px monospace';CX.fillStyle='#0e5ea8';
+    CX.textAlign='center';CX.textBaseline='top';
+    CX.fillText('W'+r.w+' D'+r.h,x+w/2,y+2/ST.sc);
+  }
+}
+
+function drawCol(c,mp){
+  var s=(c.size||105)/mp;
+  var isSel=ST.selType==='column'&&ST.selId===c.id;
+  var cx=c.x/mp,cy=c.y/mp;
+  CX.fillStyle=isSel?'rgba(14,94,168,.4)':'#2a3a48';
+  CX.strokeStyle=isSel?'#0e5ea8':'#1a2830';CX.lineWidth=1/ST.sc;
+  CX.fillRect(cx-s/2,cy-s/2,s,s);CX.strokeRect(cx-s/2,cy-s/2,s,s);
+  CX.strokeStyle='rgba(255,255,255,.4)';CX.lineWidth=.6/ST.sc;
+  CX.beginPath();CX.moveTo(cx-s/2,cy-s/2);CX.lineTo(cx+s/2,cy+s/2);CX.stroke();
+  CX.beginPath();CX.moveTo(cx+s/2,cy-s/2);CX.lineTo(cx-s/2,cy+s/2);CX.stroke();
+}
+
+function drawWall(w,mp){
+  var wt=WALL_TYPES[w.type]||WALL_TYPES.naiheki;
+  var thick=(w.thick||wt.thick)/mp/2;
+  var ang=wallAngle(w);
+  var dx=Math.sin(ang)*thick,dy=-Math.cos(ang)*thick;
+  var isSel=ST.selType==='wall'&&ST.selId===w.id;
+  var x1=w.x1/mp,y1=w.y1/mp,x2=w.x2/mp,y2=w.y2/mp;
+  CX.fillStyle=wt.fill;
+  CX.beginPath();CX.moveTo(x1+dx,y1+dy);CX.lineTo(x2+dx,y2+dy);CX.lineTo(x2-dx,y2-dy);CX.lineTo(x1-dx,y1-dy);CX.closePath();CX.fill();
+  CX.save();CX.clip();
+  var hs=6/ST.sc;CX.strokeStyle=wt.stroke;CX.lineWidth=.5/ST.sc;
+  var wlen=wallLen(w)/mp;
+  for(var t=-thick*3;t<wlen+thick*3;t+=hs){
+    var bx=x1+Math.cos(ang)*t,by=y1+Math.sin(ang)*t;
+    CX.beginPath();CX.moveTo(bx+dx,by+dy);CX.lineTo(bx-dx,by-dy);CX.stroke();
+  }
+  CX.restore();
+  var lw=(isSel?2:w.type==='gaiheki'?1.8:1.4)/ST.sc;
+  CX.strokeStyle=isSel?'#0e5ea8':wt.stroke;CX.lineWidth=lw;CX.lineCap='square';
+  [[x1+dx,y1+dy,x2+dx,y2+dy],[x1-dx,y1-dy,x2-dx,y2-dy],[x1+dx,y1+dy,x1-dx,y1-dy],[x2+dx,y2+dy,x2-dx,y2-dy]].forEach(function(l){
+    CX.beginPath();CX.moveTo(l[0],l[1]);CX.lineTo(l[2],l[3]);CX.stroke();
+  });
+}
+
+function drawOpening(o,mp){
+  var wall=(ST.walls[ST.floor]||[]).find(function(w){return w.id===o.wallId;});if(!wall)return;
+  var ang=wallAngle(wall),wt=WALL_TYPES[wall.type]||WALL_TYPES.naiheki;
+  var thick=(wall.thick||wt.thick)/mp/2;
+  var ox1=wall.x1/mp+Math.cos(ang)*o.pos/mp;
+  var oy1=wall.y1/mp+Math.sin(ang)*o.pos/mp;
+  var ow=o.w/mp;
+  var ox2=ox1+Math.cos(ang)*ow,oy2=oy1+Math.sin(ang)*ow;
+  var dx=Math.sin(ang)*thick,dy=-Math.cos(ang)*thick;
+  var bg=ST.mode==='sketch'?'#fff':'#F4F8FF';
+  // Clear opening
+  CX.save();CX.globalCompositeOperation='destination-out';
+  CX.fillStyle='rgba(0,0,0,1)';
+  CX.beginPath();CX.moveTo(ox1+dx*1.1,oy1+dy*1.1);CX.lineTo(ox2+dx*1.1,oy2+dy*1.1);CX.lineTo(ox2-dx*1.1,oy2-dy*1.1);CX.lineTo(ox1-dx*1.1,oy1-dy*1.1);CX.closePath();CX.fill();
+  CX.restore();
+  // Frame
+  CX.strokeStyle='#1a2830';CX.lineWidth=1.5/ST.sc;
+  CX.beginPath();CX.moveTo(ox1+dx,oy1+dy);CX.lineTo(ox1-dx,oy1-dy);CX.stroke();
+  CX.beginPath();CX.moveTo(ox2+dx,oy2+dy);CX.lineTo(ox2-dx,oy2-dy);CX.stroke();
+  // Symbol
+  var cx=(ox1+ox2)/2,cy=(oy1+oy2)/2,hw=ow/2,ht=thick;
+  CX.save();CX.translate(cx,cy);CX.rotate(ang);
+  CX.strokeStyle='#005050';CX.fillStyle='rgba(200,235,255,.5)';
+  if(o.type==='door_in'){
+    var d=o.dir===1?1:-1;
+    CX.lineWidth=1.4/ST.sc;CX.beginPath();CX.moveTo(-hw,d*ht);CX.lineTo(hw,d*ht);CX.stroke();
+    CX.lineWidth=.9/ST.sc;CX.setLineDash([3/ST.sc,1/ST.sc]);
+    CX.beginPath();CX.arc(-hw,d*ht,ow,d>0?-Math.PI/2:Math.PI/2,d>0?0:Math.PI,d<0);CX.stroke();
+    CX.setLineDash([]);
+  }else if(o.type==='sash'){
+    CX.lineWidth=1.2/ST.sc;CX.fillRect(-hw,-ht,ow,ht*2);
+    CX.strokeRect(-hw,-ht,ow,ht*2);CX.strokeRect(-hw,-ht,hw,ht*2);CX.strokeRect(0,-ht,hw,ht*2);
+  }else if(o.type==='shutter'){
+    CX.fillStyle='rgba(180,185,200,.5)';CX.lineWidth=1.4/ST.sc;
+    CX.fillRect(-hw,-ht,ow,ht*2);CX.strokeRect(-hw,-ht,ow,ht*2);
+    CX.lineWidth=.4/ST.sc;
+    for(var i=1;i<6;i++){CX.beginPath();CX.moveTo(-hw,-ht+ht*2*i/6);CX.lineTo(hw,-ht+ht*2*i/6);CX.stroke();}
+  }else{
+    CX.lineWidth=1.2/ST.sc;CX.fillRect(-hw,-ht,ow,ht*2);CX.strokeRect(-hw,-ht,ow,ht*2);
+  }
+  CX.restore();
+}
+
+function drawLabel(lb,mp){
+  var isSel=ST.selType==='label'&&ST.selId===lb.id;
+  CX.font='bold '+(10/ST.sc)+'px Meiryo,sans-serif';
+  CX.fillStyle=isSel?'#0e5ea8':'#1a2830';
+  CX.textAlign='center';CX.textBaseline='middle';
+  CX.fillText(lb.text,lb.x/mp,lb.y/mp);
+}
+
+function drawCompass(){
+  var cx=CV.width-36,cy=36,r=17;
+  CX.save();CX.setTransform(1,0,0,1,0,0);
+  CX.beginPath();CX.arc(cx,cy,r,0,Math.PI*2);
+  CX.fillStyle='rgba(255,255,255,.85)';CX.fill();CX.strokeStyle='#3a5a78';CX.lineWidth=1;CX.stroke();
+  CX.fillStyle='#b83008';CX.beginPath();CX.moveTo(cx,cy-r+3);CX.lineTo(cx-5,cy+r*.3);CX.lineTo(cx,cy+5);CX.closePath();CX.fill();
+  CX.fillStyle='#c8d8e8';CX.beginPath();CX.moveTo(cx,cy-r+3);CX.lineTo(cx+5,cy+r*.3);CX.lineTo(cx,cy+5);CX.closePath();CX.fill();
+  CX.font='bold 9px sans-serif';CX.fillStyle='#1a2830';CX.textAlign='center';CX.textBaseline='middle';CX.fillText('N',cx,cy-r*.6);
+  CX.restore();
+}
+
+// ═══════════════════════════════════════
+// SKETCH ENGINE
+// ═══════════════════════════════════════
+var TRACE={on:false,pts:[]};
+var TRACE_MOUSE=null;
+var RM_TGT=null;
+var EDGE_TGT=null;
+
+function drawTrace(mp){
+  if(TRACE.pts.length<1)return;
+  CX.save();
+  CX.strokeStyle='rgba(14,94,168,.7)';CX.lineWidth=3/ST.sc;CX.lineCap='round';CX.lineJoin='round';CX.setLineDash([7/ST.sc,4/ST.sc]);
+  CX.beginPath();
+  TRACE.pts.forEach(function(p,i){i===0?CX.moveTo(p.x/mp,p.y/mp):CX.lineTo(p.x/mp,p.y/mp);});
+  if(TRACE_MOUSE)CX.lineTo(TRACE_MOUSE.x/mp,TRACE_MOUSE.y/mp);
+  CX.stroke();CX.setLineDash([]);
+  // Start marker
+  CX.fillStyle='#0e5ea8';CX.beginPath();CX.arc(TRACE.pts[0].x/mp,TRACE.pts[0].y/mp,7/ST.sc,0,Math.PI*2);CX.fill();
+  CX.strokeStyle='#fff';CX.lineWidth=1.5/ST.sc;CX.stroke();
+  CX.restore();
+}
+
+function hitRoom(wx,wy){
+  var rooms=ST.rooms[ST.floor]||[];
+  for(var i=rooms.length-1;i>=0;i--){
+    var r=rooms[i];
+    if(wx>=r.x&&wx<=r.x+r.w&&wy>=r.y&&wy<=r.y+r.h)return r;
+  }
+  return null;
+}
+
+function hitRoomEdge(wx,wy){
+  var TOL=25;
+  var rooms=ST.rooms[ST.floor]||[];
+  for(var ri=0;ri<rooms.length;ri++){
+    var r=rooms[ri];
+    var edges=[
+      {x1:r.x,y1:r.y,x2:r.x+r.w,y2:r.y},
+      {x1:r.x+r.w,y1:r.y,x2:r.x+r.w,y2:r.y+r.h},
+      {x1:r.x,y1:r.y+r.h,x2:r.x+r.w,y2:r.y+r.h},
+      {x1:r.x,y1:r.y,x2:r.x,y2:r.y+r.h},
+    ];
+    for(var ei=0;ei<edges.length;ei++){
+      var e=edges[ei];
+      var ang=Math.atan2(e.y2-e.y1,e.x2-e.x1);
+      var len=Math.hypot(e.x2-e.x1,e.y2-e.y1);
+      var ddx=wx-e.x1,ddy=wy-e.y1;
+      var proj=ddx*Math.cos(ang)+ddy*Math.sin(ang);
+      var perp=Math.abs(-ddx*Math.sin(ang)+ddy*Math.cos(ang));
+      if(proj>=0&&proj<=len&&perp<TOL)return{room:r,edge:e,pos:proj,ang:ang};
+    }
+  }
+  return null;
+}
+
+function openRM(room){
+  RM_TGT=room;
+  document.getElementById('rm_name').value=room.label||'';
+  document.getElementById('rm_w').value=room.w||3600;
+  document.getElementById('rm_h').value=room.h||3600;
+  document.getElementById('rm_yuka').value=room.yuka||'フローリング(オーク)';
+  document.getElementById('rm_kabe').value=room.kabe||'ビニルクロス(白)';
+  document.getElementById('rm_tenjo').value=room.tenjo||'クロス(白)';
+  rmCalc();
+  document.getElementById('RM').classList.add('on');
+}
+function closeRM(){document.getElementById('RM').classList.remove('on');RM_TGT=null;}
+function rmCalc(){
+  var w=parseInt(document.getElementById('rm_w').value)||0;
+  var h=parseInt(document.getElementById('rm_h').value)||0;
+  var area=w*h/1000000;var jo=Math.round(area/1.62*10)/10;
+  document.getElementById('rmArea').textContent=area>0?'面積: '+area.toFixed(1)+'㎡ / '+jo+'帖':'面積: —';
+}
+function applyRM(){
+  if(!RM_TGT)return;
+  var r=RM_TGT;pushHist();
+  r.label=document.getElementById('rm_name').value||r.label;
+  r.w=Math.max(900,parseInt(document.getElementById('rm_w').value)||r.w);
+  r.h=Math.max(900,parseInt(document.getElementById('rm_h').value)||r.h);
+  r.color=ROOM_COLORS[r.label]||'#e8f0f8';
+  r.icon=ROOM_ICONS[r.label]||'🏠';
+  r.area=((r.w*r.h)/1000000).toFixed(1);
+  r.yuka=document.getElementById('rm_yuka').value;
+  r.kabe=document.getElementById('rm_kabe').value;
+  r.tenjo=document.getElementById('rm_tenjo').value;
+  closeRM();renderCV();toast('✅ 部屋を更新しました');
+}
+
+// Edge menu
+function showEM(edge,px,py){
+  EDGE_TGT=edge;
+  var m=document.getElementById('EM');
+  m.style.left=Math.min(px,window.innerWidth-190)+'px';
+  m.style.top=Math.min(py-70,window.innerHeight-100)+'px';
+  m.classList.add('on');
+}
+function insertEdge(type){
+  document.getElementById('EM').classList.remove('on');
+  if(!EDGE_TGT)return;
+  var wall=findWallNearEdge(EDGE_TGT.edge);
+  if(!wall){toast('先に壁を描いてください');return;}
+  pushHist();
+  var w=type==='sash'?1235:type==='shutter'?2700:734;
+  var h=type==='sash'?970:type==='shutter'?2200:2023;
+  ST.openings[ST.floor].push({id:ST.nid++,wallId:wall.id,pos:Math.max(0,EDGE_TGT.pos-w/2),w:w,h:h,type:type,dir:1});
+  renderCV();toast((type==='sash'?'🪟 窓':type==='shutter'?'🔳 シャッター':'🚪 ドア')+' を挿入しました');
+  EDGE_TGT=null;
+}
+function findWallNearEdge(edge){
+  var mx=(edge.x1+edge.x2)/2,my=(edge.y1+edge.y2)/2;
+  var best=null,bd=300;
+  (ST.walls[ST.floor]||[]).forEach(function(w){
+    var d=Math.hypot((w.x1+w.x2)/2-mx,(w.y1+w.y2)/2-my);
+    if(d<bd){bd=d;best=w;}
+  });
+  return best;
+}
+
+// ═══════════════════════════════════════
+// TOOL
+// ═══════════════════════════════════════
+function setTool(t){
+  ST.tool=t;WALL_S=null;TRACE={on:false,pts:[]};
+  TRACE_MOUSE=null;hideHint();
+  ['finger','ssel','sel','wall','open','col','del'].forEach(function(id){
+    var el=document.getElementById('t_'+id);if(el)el.classList.toggle('on',id===t);
+  });
+  var hints={'wall':'壁の始点をタップ','open':'壁をタップして建具挿入','col':'タップで柱を配置','del':'タップで削除','finger':'指でなぞって部屋を作成 / 部屋タップで編集'};
+  if(hints[t])showHint(hints[t]);
+  renderCV();
+}
+
+// ═══════════════════════════════════════
+// CAD: WALL TOOLS
+// ═══════════════════════════════════════
+var WALL_S=null,MOUSE_W=null;
+
+function closestWall(wx,wy,maxD){
+  var best=null,bd=maxD||100;
+  (ST.walls[ST.floor]||[]).forEach(function(w){
+    var ang=wallAngle(w),len=wallLen(w);
+    var ddx=wx-w.x1,ddy=wy-w.y1;
+    var proj=ddx*Math.cos(ang)+ddy*Math.sin(ang);
+    var perp=Math.abs(-ddx*Math.sin(ang)+ddy*Math.cos(ang));
+    if(proj>=0&&proj<=len&&perp<bd){bd=perp;best={wall:w,pos:proj};}
+  });
+  return best;
+}
+
+function hitAny(wx,wy){
+  var tol=15;
+  var r=hitRoom(wx,wy);if(r)return{el:r,t:'room'};
+  var wh=closestWall(wx,wy,tol);if(wh)return{el:wh.wall,t:'wall'};
+  for(var i=0;i<(ST.columns[ST.floor]||[]).length;i++){
+    var c=ST.columns[ST.floor][i];
+    var s=(c.size||105)/2;
+    if(Math.abs(wx-c.x)<s+5&&Math.abs(wy-c.y)<s+5)return{el:c,t:'column'};
+  }
+  for(var j=0;j<(ST.labels[ST.floor]||[]).length;j++){
+    var lb=ST.labels[ST.floor][j];
+    if(Math.abs(wx-lb.x)<50&&Math.abs(wy-lb.y)<20)return{el:lb,t:'label'};
+  }
+  return null;
+}
+
+function drawWallPrev(mp){
+  if(!WALL_S||!MOUSE_W)return;
+  var locked=orthoLock(WALL_S.x,WALL_S.y,MOUSE_W.x,MOUSE_W.y);
+  var sn=smartSnap(locked.x,locked.y);
+  CX.save();
+  CX.strokeStyle='rgba(14,94,168,.6)';
+  CX.lineWidth=(WALL_TYPES[WTYPE].thick)/ST.mp;
+  CX.lineCap='square';CX.setLineDash([6/ST.sc,4/ST.sc]);
+  CX.beginPath();CX.moveTo(WALL_S.x/ST.mp,WALL_S.y/ST.mp);CX.lineTo(sn.x/ST.mp,sn.y/ST.mp);CX.stroke();
+  CX.setLineDash([]);
+  var len=Math.round(Math.hypot(sn.x-WALL_S.x,sn.y-WALL_S.y));
+  if(len>0){
+    CX.font='bold '+(10/ST.sc)+'px monospace';CX.fillStyle='#0e5ea8';
+    CX.textAlign='center';CX.textBaseline='bottom';
+    CX.fillText(len+'mm',(WALL_S.x/ST.mp+sn.x/ST.mp)/2,(WALL_S.y/ST.mp+sn.y/ST.mp)/2-4/ST.sc);
+  }
+  CX.restore();
+}
+
+// ═══════════════════════════════════════
+// POINTER EVENTS (CANVAS)
+// ═══════════════════════════════════════
+var PTRS=new Map(),PINCH={on:false,d0:0},PAN={on:false},DR={on:false,el:null,t:'',ox:0,oy:0};
+
+CV.addEventListener('pointerdown',function(e){
+  e.preventDefault();
+  CV.setPointerCapture(e.pointerId);
+  PTRS.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  var rect=CV.getBoundingClientRect();
+  var sx=e.clientX-rect.left,sy=e.clientY-rect.top;
+  var wc=s2w(sx,sy);var wx=wc.wx,wy=wc.wy;
+
+  if(PTRS.size>=2){
+    PINCH.on=true;PINCH.d0=ptrDist();PAN={on:false};DR={on:false};
+    TRACE={on:false,pts:[]};TRACE_MOUSE=null;
+    return;
+  }
+
+  var mode=ST.mode,tool=ST.tool;
+
+  // SKETCH mode
+  if(mode==='sketch'){
+    if(tool==='finger'){
+      // Check tap on room first
+      var troom=hitRoom(wx,wy);
+      if(troom){openRM(troom);return;}
+      // Check edge tap
+      var tedge=hitRoomEdge(wx,wy);
+      if(tedge){showEM(tedge,e.clientX,e.clientY);return;}
+      // Start trace
+      TRACE={on:true,pts:[{x:snapW(wx),y:snapW(wy)}]};
+      TRACE_MOUSE={x:wx,y:wy};
+      showHint('指をなぞって部屋の形を描く — 始点に戻ると確定');
+    }else if(tool==='ssel'){
+      var h=hitAny(wx,wy);
+      if(h){ST.selId=h.el.id;ST.selType=h.t;DR={on:true,el:h.el,t:h.t,ox:wx-(h.el.x||0),oy:wy-(h.el.y||0)};pushHist();}
+      else{ST.selId=null;ST.selType=null;PAN={on:true,sx:e.clientX,sy:e.clientY,ovx:ST.vx,ovy:ST.vy};}
+      renderCV();
+    }
+  }
+
+  // CAD mode
+  if(mode==='cad'){
+    if(tool==='wall'){
+      if(!WALL_S){
+        var sn=smartSnap(wx,wy);WALL_S={x:sn.x,y:sn.y};
+      }else{
+        var locked=orthoLock(WALL_S.x,WALL_S.y,wx,wy);
+        var sn2=smartSnap(locked.x,locked.y);
+        var len=Math.hypot(sn2.x-WALL_S.x,sn2.y-WALL_S.y);
+        if(len>50){
+          pushHist();
+          var wt=WALL_TYPES[WTYPE];
+          ST.walls[ST.floor].push({id:ST.nid++,x1:WALL_S.x,y1:WALL_S.y,x2:sn2.x,y2:sn2.y,type:WTYPE,thick:wt.thick});
+          WALL_S={x:sn2.x,y:sn2.y};
+          renderCV();
+        }
+      }
+    }else if(tool==='open'){
+      var hit=closestWall(wx,wy,150);
+      if(hit){
+        pushHist();
+        var ow=734,oh=2023;
+        ST.openings[ST.floor].push({id:ST.nid++,wallId:hit.wall.id,pos:Math.max(0,hit.pos-ow/2),w:ow,h:oh,type:'door_in',dir:1});
+        renderCV();toast('🚪 ドアを配置 — 長押し→プロパティで種別変更');
+      }else toast('壁の上をタップしてください');
+    }else if(tool==='col'){
+      pushHist();
+      var sn3=smartSnap(wx,wy);
+      ST.columns[ST.floor].push({id:ST.nid++,x:sn3.x,y:sn3.y,size:COL_SIZE});
+      renderCV();
+    }else if(tool==='del'){
+      var dh=hitAny(wx,wy);
+      if(dh){
+        pushHist();
+        var id=dh.el.id,t=dh.t;
+        if(t==='room')ST.rooms[ST.floor]=ST.rooms[ST.floor].filter(function(r){return r.id!==id;});
+        else if(t==='wall')ST.walls[ST.floor]=ST.walls[ST.floor].filter(function(w){return w.id!==id;});
+        else if(t==='column')ST.columns[ST.floor]=ST.columns[ST.floor].filter(function(c){return c.id!==id;});
+        else if(t==='label')ST.labels[ST.floor]=ST.labels[ST.floor].filter(function(l){return l.id!==id;});
+        renderCV();toast('削除しました');
+      }
+    }else if(tool==='sel'){
+      var sh=hitAny(wx,wy);
+      if(sh){ST.selId=sh.el.id;ST.selType=sh.t;DR={on:true,el:sh.el,t:sh.t,ox:wx-(sh.el.x||sh.el.x1||0),oy:wy-(sh.el.y||sh.el.y1||0)};pushHist();}
+      else{ST.selId=null;ST.selType=null;PAN={on:true,sx:e.clientX,sy:e.clientY,ovx:ST.vx,ovy:ST.vy};}
+      renderCV();
+    }
+  }
+},{passive:false});
+
+CV.addEventListener('pointermove',function(e){
+  PTRS.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  var rect=CV.getBoundingClientRect();
+  var wx=s2w(e.clientX-rect.left,e.clientY-rect.top).wx;
+  var wy=s2w(e.clientX-rect.left,e.clientY-rect.top).wy;
+
+  // Pinch zoom
+  if(PINCH.on&&PTRS.size>=2){
+    var nd=ptrDist();
+    if(PINCH.d0>0){
+      var factor=nd/PINCH.d0;
+      var pts=Array.from(PTRS.values());
+      var cx=(pts[0].x+pts[1].x)/2-CV.getBoundingClientRect().left;
+      var cy=(pts[0].y+pts[1].y)/2-CV.getBoundingClientRect().top;
+      var ns=Math.max(.1,Math.min(10,ST.sc*factor));
+      ST.vx=cx-((cx-ST.vx)/ST.sc)*ns;ST.vy=cy-((cy-ST.vy)/ST.sc)*ns;ST.sc=ns;
+      PINCH.d0=nd;renderCV();
+    }
+    return;
+  }
+
+  // Pan
+  if(PAN.on){ST.vx=PAN.ovx+(e.clientX-PAN.sx);ST.vy=PAN.ovy+(e.clientY-PAN.sy);renderCV();return;}
+
+  // Drag room/wall
+  if(DR.on&&DR.el){
+    var M=ST.mod;
+    if(DR.t==='room'){DR.el.x=Math.round((wx-DR.ox)/M)*M;DR.el.y=Math.round((wy-DR.oy)/M)*M;}
+    else if(DR.t==='wall'){
+      var ddx=wx-DR.ox-DR.el.x1,ddy=wy-DR.oy-DR.el.y1;
+      DR.el.x1=Math.round((DR.el.x1+ddx)/M)*M;DR.el.y1=Math.round((DR.el.y1+ddy)/M)*M;
+      DR.el.x2=Math.round((DR.el.x2+ddx)/M)*M;DR.el.y2=Math.round((DR.el.y2+ddy)/M)*M;
+    }else if(DR.t==='column'||DR.t==='label'){DR.el.x=Math.round((wx)/M)*M;DR.el.y=Math.round((wy)/M)*M;}
+    renderCV();return;
+  }
+
+  // Trace update
+  if(TRACE.on&&ST.tool==='finger'){
+    TRACE_MOUSE={x:wx,y:wy};
+    var mp=ST.mp,last=TRACE.pts[TRACE.pts.length-1];
+    if(Math.hypot(wx-last.x,wy-last.y)>ST.mod*.35){
+      TRACE.pts.push({x:snapW(wx),y:snapW(wy)});
+    }
+    // Close check
+    if(TRACE.pts.length>=4){
+      var first=TRACE.pts[0];
+      var sp=CV.getBoundingClientRect();
+      var fx=first.x/mp*ST.sc+ST.vx,fy=first.y/mp*ST.sc+ST.vy;
+      if(Math.hypot(e.clientX-sp.left-fx,e.clientY-sp.top-fy)<22){
+        finishTrace();return;
+      }
+    }
+    renderCV();return;
+  }
+
+  // Wall preview
+  if(ST.tool==='wall'&&WALL_S){MOUSE_W={x:wx,y:wy};renderCV();}
+},{passive:true});
+
+CV.addEventListener('pointerup',function(e){
+  PTRS.delete(e.pointerId);
+  if(PTRS.size<2)PINCH={on:false,d0:0};
+  if(PTRS.size===0){
+    PAN={on:false};
+    if(DR.on){DR.on=false;DR.el=null;}
+    if(TRACE.on&&ST.tool==='finger'&&TRACE.pts.length>=4){
+      finishTrace();
+    }else if(TRACE.on&&TRACE.pts.length<4){
+      TRACE={on:false,pts:[]};TRACE_MOUSE=null;hideHint();renderCV();
+    }
+  }
+},{passive:true});
+
+function ptrDist(){
+  var pts=Array.from(PTRS.values());
+  if(pts.length<2)return 0;
+  return Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+}
+
+function finishTrace(){
+  var pts=TRACE.pts;
+  if(pts.length<3){TRACE={on:false,pts:[]};TRACE_MOUSE=null;hideHint();renderCV();return;}
+  // Bounding box
+  var minX=Math.min.apply(null,pts.map(function(p){return p.x;}));
+  var maxX=Math.max.apply(null,pts.map(function(p){return p.x;}));
+  var minY=Math.min.apply(null,pts.map(function(p){return p.y;}));
+  var maxY=Math.max.apply(null,pts.map(function(p){return p.y;}));
+  var w=maxX-minX,h=maxY-minY;
+  if(w<ST.mod||h<ST.mod){TRACE={on:false,pts:[]};TRACE_MOUSE=null;hideHint();toast('部屋が小さすぎます');renderCV();return;}
+  var cx=Math.round((minX+maxX)/2/ST.mod)*ST.mod;
+  var cy=Math.round((minY+maxY)/2/ST.mod)*ST.mod;
+  var rw=Math.round(w/ST.mod)*ST.mod;
+  var rh=Math.round(h/ST.mod)*ST.mod;
+  var room={
+    id:ST.nid++,x:cx-rw/2,y:cy-rh/2,w:rw,h:rh,
+    label:'部屋',icon:'🏠',color:'#e8f0f8',
+    area:((rw*rh)/1000000).toFixed(1),
+    yuka:'フローリング(オーク)',kabe:'ビニルクロス(白)',tenjo:'クロス(白)',
+  };
+  pushHist();
+  if(!ST.rooms[ST.floor])ST.rooms[ST.floor]=[];
+  ST.rooms[ST.floor].push(room);
+  TRACE={on:false,pts:[]};TRACE_MOUSE=null;hideHint();
+  navigator.vibrate&&navigator.vibrate(40);
+  renderCV();
+  openRM(room);
+  toast('✅ 部屋を作成しました — タップして名前・寸法を編集');
+}
+
+// ═══════════════════════════════════════
+// DRAG & DROP (PALETTE)
+// ═══════════════════════════════════════
+var DND={active:false,item:null,srcEl:null,sx:0,sy:0,lx:0,ly:0,timer:null,triggered:false};
+var LONG_MS=500;
+
+function dndBegin(item,el,cx,cy){
+  if(DND.timer)clearTimeout(DND.timer);
+  DND={active:false,item:item,srcEl:el,sx:cx,sy:cy,lx:cx,ly:cy,triggered:false,
+    timer:setTimeout(function(){DND.triggered=true;dndActivate(cx,cy);},LONG_MS)};
+  el.classList.add('held');
+}
+function dndActivate(cx,cy){
+  DND.active=true;
+  var g=document.getElementById('dgh');
+  document.getElementById('dghI').textContent=DND.item.icon;
+  document.getElementById('dghL').textContent=DND.item.label;
+  document.getElementById('dghS').textContent=DND.item.dw?DND.item.dw+'×'+DND.item.dh+'mm':'';
+  g.style.left=cx+'px';g.style.top=cy+'px';g.classList.add('on');
+  document.getElementById('CW').classList.add('drop-ready');
+  navigator.vibrate&&navigator.vibrate(35);
+}
+function dndMove(cx,cy){
+  DND.lx=cx;DND.ly=cy;
+  if(!DND.triggered&&Math.hypot(cx-DND.sx,cy-DND.sy)>12){
+    clearTimeout(DND.timer);DND.triggered=true;dndActivate(cx,cy);
+  }
+  if(DND.active){var g=document.getElementById('dgh');g.style.left=cx+'px';g.style.top=cy+'px';}
+}
+function dndEnd(cx,cy){
+  clearTimeout(DND.timer);
+  if(DND.srcEl)DND.srcEl.classList.remove('held');
+  document.getElementById('dgh').classList.remove('on');
+  document.getElementById('CW').classList.remove('drop-ready');
+  if(!DND.item){DND.active=false;return;}
+  if(!DND.triggered&&Math.hypot(cx-DND.sx,cy-DND.sy)<10){DND.active=false;DND.item=null;return;}
+  var cw=document.getElementById('CW');
+  var rc=cw.getBoundingClientRect();
+  if(cx>=rc.left&&cx<=rc.right&&cy>=rc.top&&cy<=rc.bottom){
+    var mx=cx-rc.left,my=cy-rc.top;
+    var wc=s2w(mx,my);var wx=wc.wx,wy=wc.wy;
+    var M=ST.mod;
+    var sx=Math.round(wx/M)*M,sy=Math.round(wy/M)*M;
+    var item=DND.item;
+    pushHist();
+    if(item.t==='room'){
+      var dw=item.dw||M*4,dh=item.dh||M*3;
+      var lbl=item.label;
+      var room={
+        id:ST.nid++,
+        x:sx-Math.round(dw/2/M)*M,y:sy-Math.round(dh/2/M)*M,
+        w:dw,h:dh,label:lbl,icon:item.icon||ROOM_ICONS[lbl]||'🏠',
+        color:item.c||ROOM_COLORS[lbl]||'#e8f0f8',
+        area:((dw*dh)/1000000).toFixed(1),
+        yuka:'フローリング(オーク)',kabe:'ビニルクロス(白)',tenjo:'クロス(白)',
+      };
+      if(!ST.rooms[ST.floor])ST.rooms[ST.floor]=[];
+      ST.rooms[ST.floor].push(room);
+      showSnap('✅ '+lbl+' を配置しました');
+      renderCV();
+      openRM(room);
+      if(DND.srcEl){DND.srcEl.classList.add('placed');setTimeout(function(){DND.srcEl&&DND.srcEl.classList.remove('placed');},700);}
+    }else if(item.t==='col'){
+      ST.columns[ST.floor].push({id:ST.nid++,x:sx,y:sy,size:item.dw||COL_SIZE});
+      showSnap('⬛ 柱を配置');renderCV();
+    }else if(item.t==='wall_h'){
+      ST.walls[ST.floor].push({id:ST.nid++,x1:sx,y1:sy,x2:sx+item.dw,y2:sy,type:item.wt||'gaiheki',thick:WALL_TYPES[item.wt||'gaiheki'].thick});
+      showSnap('▬ 壁(水平)を配置');renderCV();
+    }else if(item.t==='wall_v'){
+      ST.walls[ST.floor].push({id:ST.nid++,x1:sx,y1:sy,x2:sx,y2:sy+item.dh,type:item.wt||'gaiheki',thick:WALL_TYPES[item.wt||'gaiheki'].thick});
+      showSnap('┃ 壁(垂直)を配置');renderCV();
+    }
+    navigator.vibrate&&navigator.vibrate([20,10,20]);
+  }else{showSnap('⚠️ 図面の上にドロップしてください');}
+  DND.active=false;DND.item=null;
+}
+
+// ═══════════════════════════════════════
+// QUICK PALETTE
+// ═══════════════════════════════════════
+var QP_CATS=[
+  {id:'living',label:'🛋️ 居室'},
+  {id:'wet',label:'💧 水回り'},
+  {id:'common',label:'🚶 共用'},
+  {id:'special',label:'🏗️ 特殊'},
+  {id:'opening',label:'🚪 建具'},
+  {id:'struct',label:'⬛ 構造'},
+];
+var QP_ITEMS={
+  living:[
+    {t:'room',label:'リビング',icon:'🛋️',dw:5400,dh:4500,c:'#fff8d8',cc:'#f0c040'},
+    {t:'room',label:'LDK',icon:'🍳',dw:7200,dh:5400,c:'#fff8d8',cc:'#f0a020'},
+    {t:'room',label:'ダイニング',icon:'🍽️',dw:3600,dh:3600,c:'#f8ffe0',cc:'#a0c020'},
+    {t:'room',label:'主寝室',icon:'🛏️',dw:4500,dh:4500,c:'#e0e8ff',cc:'#4060e0'},
+    {t:'room',label:'洋室6帖',icon:'🛏️',dw:3600,dh:3600,c:'#e0e8ff',cc:'#6080e0'},
+    {t:'room',label:'洋室4.5帖',icon:'🛏️',dw:2700,dh:3600,c:'#e8eeff',cc:'#8090e0'},
+    {t:'room',label:'和室6帖',icon:'🏯',dw:3600,dh:3600,c:'#f8f0d8',cc:'#c08030'},
+    {t:'room',label:'和室4.5帖',icon:'🏯',dw:2700,dh:3600,c:'#f8f0d8',cc:'#d09040'},
+    {t:'room',label:'子供室',icon:'🧒',dw:3600,dh:3600,c:'#fff0f8',cc:'#e060a0'},
+    {t:'room',label:'書斎',icon:'📚',dw:2700,dh:2700,c:'#e0f0ff',cc:'#2080c0'},
+    {t:'room',label:'キッチン',icon:'🔪',dw:2700,dh:3600,c:'#e8ffe8',cc:'#20a040'},
+  ],
+  wet:[
+    {t:'room',label:'UB1616',icon:'🛁',dw:1600,dh:1600,c:'#d0eeff',cc:'#0090d0'},
+    {t:'room',label:'UB1620',icon:'🛁',dw:1600,dh:2000,c:'#d0eeff',cc:'#0090d0'},
+    {t:'room',label:'UB1818',icon:'🛁',dw:1800,dh:1800,c:'#d0eeff',cc:'#00a0d0'},
+    {t:'room',label:'トイレ',icon:'🚽',dw:900,dh:1800,c:'#e8d8ff',cc:'#8040c0'},
+    {t:'room',label:'洗面所',icon:'🪥',dw:1800,dh:1800,c:'#d8f8f0',cc:'#00a080'},
+    {t:'room',label:'脱衣所',icon:'👕',dw:1800,dh:1800,c:'#fff0d8',cc:'#e08020'},
+    {t:'room',label:'洗濯室',icon:'🌀',dw:1800,dh:1800,c:'#d8f0ff',cc:'#2090e0'},
+    {t:'room',label:'PS',icon:'🔧',dw:450,dh:450,c:'#d0d0d0',cc:'#808080'},
+  ],
+  common:[
+    {t:'room',label:'玄関',icon:'🚪',dw:1800,dh:1800,c:'#e0ecf8',cc:'#3060a0'},
+    {t:'room',label:'玄関ホール',icon:'🏠',dw:2700,dh:2700,c:'#e0f0ff',cc:'#2070b0'},
+    {t:'room',label:'廊下',icon:'⬌',dw:3600,dh:900,c:'#f8f4d8',cc:'#b0a020'},
+    {t:'room',label:'階段',icon:'🪜',dw:1800,dh:2700,c:'#e8d8f8',cc:'#8050c0'},
+    {t:'room',label:'クローゼット',icon:'👔',dw:1800,dh:900,c:'#f0e8d8',cc:'#a06020'},
+    {t:'room',label:'納戸',icon:'📦',dw:1800,dh:2700,c:'#ece8d8',cc:'#907040'},
+    {t:'room',label:'シューズクローク',icon:'👟',dw:1800,dh:1800,c:'#e8e8e0',cc:'#808060'},
+    {t:'room',label:'ホール',icon:'🔄',dw:2700,dh:2700,c:'#f0eeff',cc:'#7060c0'},
+  ],
+  special:[
+    {t:'room',label:'ガレージ2台',icon:'🚗',dw:5400,dh:5400,c:'#d0d8e4',cc:'#506080'},
+    {t:'room',label:'ガレージ1台',icon:'🚗',dw:2700,dh:5400,c:'#d8dce4',cc:'#607090'},
+    {t:'room',label:'ベランダ',icon:'🌿',dw:5400,dh:1800,c:'#d0fce0',cc:'#20a040'},
+    {t:'room',label:'バルコニー',icon:'🌿',dw:3600,dh:1200,c:'#d8fce8',cc:'#30b050'},
+    {t:'room',label:'RFバルコニー',icon:'🌇',dw:5400,dh:5400,c:'#ffe0c8',cc:'#c84010'},
+    {t:'room',label:'塔屋',icon:'🏠',dw:1800,dh:1800,c:'#f0e0d0',cc:'#c05020'},
+    {t:'room',label:'小屋裏',icon:'🏔️',dw:3600,dh:3600,c:'#e8e0d0',cc:'#908060'},
+    {t:'room',label:'サンルーム',icon:'☀️',dw:2700,dh:2700,c:'#fff8d0',cc:'#e0b000'},
+  ],
+  opening:[
+    {t:'wall_h',label:'外壁 水平',icon:'━',dw:3600,dh:150,wt:'gaiheki',cc:'#2a3848'},
+    {t:'wall_v',label:'外壁 垂直',icon:'┃',dw:150,dh:3600,wt:'gaiheki',cc:'#2a3848'},
+    {t:'wall_h',label:'内壁 水平',icon:'─',dw:3600,dh:120,wt:'naiheki',cc:'#3a4858'},
+    {t:'wall_v',label:'内壁 垂直',icon:'│',dw:120,dh:3600,wt:'naiheki',cc:'#3a4858'},
+    {t:'wall_h',label:'間仕切 水平',icon:'╌',dw:1800,dh:90,wt:'kajiri',cc:'#4a5868'},
+    {t:'wall_v',label:'間仕切 垂直',icon:'╎',dw:90,dh:1800,wt:'kajiri',cc:'#4a5868'},
+  ],
+  struct:[
+    {t:'col',label:'柱 105',icon:'⬛',dw:105,dh:105,cc:'#304050'},
+    {t:'col',label:'柱 120',icon:'⬛',dw:120,dh:120,cc:'#304050'},
+    {t:'col',label:'柱 150',icon:'⬛',dw:150,dh:150,cc:'#304050'},
+    {t:'col',label:'柱 180',icon:'⬛',dw:180,dh:180,cc:'#304050'},
+  ],
+};
+var QP_CAT='living';
+
+function buildQP(){buildQPCats();buildQPGrid();}
+function toggleQP(){
+  var qp=document.getElementById('QP');qp.classList.toggle('collapsed');
+  if(!qp.classList.contains('collapsed'))buildQP();
+}
+function buildQPCats(){
+  var el=document.getElementById('qpCats');if(!el)return;
+  el.innerHTML=QP_CATS.map(function(c){
+    return '<div class="qpcat'+(QP_CAT===c.id?' on':'')+'" onclick="setQPCat(\''+c.id+'\')">'+c.label+'</div>';
+  }).join('');
+}
+function setQPCat(id){QP_CAT=id;buildQPCats();buildQPGrid();document.getElementById('QP').classList.remove('collapsed');}
+function buildQPGrid(){
+  var el=document.getElementById('qpGrid');if(!el)return;
+  var items=QP_ITEMS[QP_CAT]||[];
+  el.innerHTML=items.map(function(item,i){
+    var sz=item.dw&&item.dh?(item.dw+'×'+item.dh):'';
+    return '<div class="qpChip" style="--cc:'+(item.cc||'#aaa')+'" id="qpc_'+i+'"'
+      +' ontouchstart="qpTS(event,\''+QP_CAT+'\','+i+')"'
+      +' onmousedown="qpMD(event,\''+QP_CAT+'\','+i+')">'
+      +'<span class="qpi">'+item.icon+'</span>'
+      +'<span class="qpl">'+item.label+'</span>'
+      +(sz?'<span class="qpsz">'+sz+'</span>':'')
+      +'</div>';
+  }).join('');
+}
+function qpTS(e,cat,idx){
+  var t=e.touches[0];
+  dndBegin(QP_ITEMS[cat][idx],e.currentTarget,t.clientX,t.clientY);
+  document.addEventListener('touchmove',_qpTM,{passive:false});
+  document.addEventListener('touchend',_qpTE,{once:true});
+}
+function qpMD(e,cat,idx){
+  if(e.button!==0)return;
+  dndBegin(QP_ITEMS[cat][idx],e.currentTarget,e.clientX,e.clientY);
+  document.addEventListener('mousemove',_qpMM);
+  document.addEventListener('mouseup',_qpMU,{once:true});
+}
+function _qpTM(e){e.preventDefault();var t=e.touches[0];dndMove(t.clientX,t.clientY);}
+function _qpMM(e){dndMove(e.clientX,e.clientY);}
+function _qpTE(){document.removeEventListener('touchmove',_qpTM);dndEnd(DND.lx,DND.ly);}
+function _qpMU(e){document.removeEventListener('mousemove',_qpMM);dndEnd(e.clientX,e.clientY);}
+
+// ═══════════════════════════════════════
+// AI BAR
+// ═══════════════════════════════════════
+var AIB_MODE=0;
+var AIB_TAGS={
+  0:['南玄関','ガレージ2台','UB+WC','廊下型','LDK20畳','主寝室8畳','和室6帖','ベランダ南','子供室×2'],
+  1:['サッシ標準寸法','壁量計算 木造','断熱等級6 基準','採光 居室 法規','坪単価 2025','UBサイズ一覧','階段 踏面法規','BF廊下幅'],
+  2:['YKK AP窓','LIXIL ドア','TOTO UB','国交省 建築基準法','PANASONIC 住設'],
+};
+var AIB_URLS={
+  'YKK AP窓':'https://www.ykkap.co.jp/consumer/products/window/',
+  'LIXIL ドア':'https://www.lixil.co.jp/lineup/door/',
+  'TOTO UB':'https://jp.toto.com/products/bath/',
+  '国交省 建築基準法':'https://www.mlit.go.jp/jutakukentiku/build/index.html',
+  'PANASONIC 住設':'https://sumai.panasonic.jp/atterio/',
+};
+
+function setAibMode(m){
+  AIB_MODE=m;
+  [0,1,2].forEach(function(i){document.getElementById('am'+i).classList.toggle('on',i===m);});
+  var urlRow=document.getElementById('aibUrlRow');
+  urlRow.classList.toggle('on',m===2);
+  var ta=document.getElementById('aibTA');
+  if(ta)ta.placeholder={0:'例：南向き3LDK、1階ガレージ+UB…',1:'例：サッシ標準寸法、壁量計算の方法…',2:'参照URLについての質問を入力…'}[m];
+  buildAibTags();
+}
+function buildAibTags(){
+  var el=document.getElementById('aibTags');if(!el)return;
+  var tags=AIB_TAGS[AIB_MODE]||[];
+  el.innerHTML=tags.map(function(t){
+    return '<button class="aib-tag" onclick="aibTagClick(\''+t+'\')">'+t+'</button>';
+  }).join('');
+}
+function aibTagClick(t){
+  if(AIB_MODE===2&&AIB_URLS[t]){
+    document.getElementById('aibUrl').value=AIB_URLS[t];
+    document.getElementById('aibTA').value='このページの製品情報・寸法・価格を建築設計に役立つ形で教えてください';
+    aibUrlGo();
+  }else{
+    var ta=document.getElementById('aibTA');if(ta){ta.value=(ta.value?ta.value+'、':'')+t;}
+  }
+}
+async function aibGo(withSearch){
+  var ta=document.getElementById('aibTA'),prompt=ta?ta.value.trim():'';
+  if(!prompt){toast('要望を入力してください');return;}
+  if(AIB_MODE===1){
+    showLoad('🔍 建材・法規を検索中…','Google検索+Gemini 2.5 Flash');
+    try{
+      var resp=await callGemini('建築・建材専門家として回答してください。\n質問: '+prompt+'\n現場で使える具体的な数値・規格・法規を日本語で。',true,[]);
+      hideLoad();openAI();addAIMsg('b','🔍 **'+prompt+'**\n\n'+resp);toast('✅ 検索完了');
+    }catch(e){hideLoad();toast('検索エラー: '+e.message);}
+    return;
+  }
+  if(AIB_MODE===2){await aibUrlGo();return;}
+  // Plan mode
+  await aibGenPlan(withSearch,prompt);
+}
+async function aibUrlGo(){
+  var url=document.getElementById('aibUrl')&&document.getElementById('aibUrl').value.trim();
+  var prompt=(document.getElementById('aibTA')&&document.getElementById('aibTA').value.trim())||'このページの内容を建築設計に役立つ形で要約してください';
+  if(!url){toast('URLを入力してください');return;}
+  showLoad('🌐 URLを参照中…','Gemini 2.5 Flash URL Context で解析中');
+  try{
+    var resp=await callGemini('以下のURLのページを参照して質問に答えてください。\nURL: '+url+'\n\n質問: '+prompt+'\n\n建築・建材・法規に関連する情報を日本語で。',false,[url]);
+    hideLoad();openAI();addAIMsg('b','🌐 **URL参照: '+url.split('/')[2]+'**\n\n'+resp);toast('✅ URL参照完了');
+  }catch(e){
+    hideLoad();
+    try{
+      showLoad('🔍 検索で代替中…','');
+      var r2=await callGemini(url+'について: '+prompt,true,[]);
+      hideLoad();openAI();addAIMsg('b','🔍 Web検索で取得\n\n'+r2);
+    }catch(e2){hideLoad();toast('エラー: '+e2.message);}
+  }
+}
+async function aibGenPlan(useSearch,prompt){
+  showLoad('✨ AI間取り生成中…','Gemini 2.5 Flash が壁データを生成中');
+  var M=ST.mod;
+  var floors=BLDG_TYPES[BLDG_TYPE].floors;
+  var sys='あなたは日本の木造住宅CADシステムです。以下の間取り要望からJSONのみ返答してください（説明不要）。\n'
+    +'建物: 幅'+ST.bldg.w+'mm×奥行'+ST.bldg.d+'mm モジュール:'+M+'mm\n'
+    +'建物タイプ: '+BLDG_TYPES[BLDG_TYPE].label+' フロア: '+floors.join('/')+'\n'
+    +'{"walls1F":[{"x1":mm,"y1":mm,"x2":mm,"y2":mm,"type":"gaiheki|naiheki|kajiri","thick":mm},...],\n'
+    +'"labels1F":[{"x":mm,"y":mm,"text":"部屋名","area":"面積㎡"},...],\n'
+    +(floors.includes(2)?'"walls2F":[...],"labels2F":[...],\n':'')
+    +'"axes":{"x":[{"pos":mm,"label":"①"}],"y":[{"pos":mm,"label":"A"}]}}\n'
+    +'ルール: 全座標は'+M+'mmの倍数。外壁thick:150、内壁thick:120。';
+  try{
+    var raw=await callGemini(sys+'\n\n要望: '+prompt,useSearch,[]);
+    var json=raw.replace(/```json\n?/g,'').replace(/```/g,'').trim();
+    var d=JSON.parse(json);
+    pushHist();
+    floors.forEach(function(fl){
+      var wk='walls'+fl+'F',lk='labels'+fl+'F';
+      if(d[wk]&&d[wk].length)ST.walls[fl]=d[wk].map(function(w){return Object.assign({},w,{id:ST.nid++});});
+      if(d[lk])ST.labels[fl]=d[lk].map(function(l){return Object.assign({},l,{id:ST.nid++});});
+    });
+    if(d.axes){
+      if(d.axes.x)ST.axes.x=d.axes.x.map(function(a){return Object.assign({},a,{id:ST.nid++});});
+      if(d.axes.y)ST.axes.y=d.axes.y.map(function(a){return Object.assign({},a,{id:ST.nid++});});
+    }
+    hideLoad();renderCV();
+    var total=floors.reduce(function(s,f){return s+(ST.walls[f]||[]).length;},0);
+    toast('✅ AI生成完了 — 壁'+total+'本');
+  }catch(e){hideLoad();toast('生成エラー: '+e.message+'  JSON解析に失敗しました');}
+}
+
+// ═══════════════════════════════════════
+// AI CHAT
+// ═══════════════════════════════════════
+function openAI(){document.getElementById('AIP').classList.add('on');}
+function closeAI(){document.getElementById('AIP').classList.remove('on');}
+function addAIMsg(side,text){
+  var el=document.getElementById('aiMsgs');
+  var div=document.createElement('div');div.className='amsg '+side;
+  var bub=document.createElement('div');bub.className='abub';bub.textContent=text;
+  div.appendChild(bub);el.appendChild(div);el.scrollTop=el.scrollHeight;
+}
+async function aiSend(){
+  var ta=document.getElementById('aiTA'),text=ta?ta.value.trim():'';
+  if(!text)return;
+  addAIMsg('u',text);ta.value='';ta.style.height='34px';
+  var dot=document.createElement('div');dot.className='amsg b';dot.innerHTML='<div class="abub"><span class="dots"><span>●</span><span>●</span><span>●</span></span></div>';
+  document.getElementById('aiMsgs').appendChild(dot);
+  try{
+    var resp=await callGemini('建築専門AI。\n質問: '+text+'\n建築・設計の実践的な情報を日本語で。',false,[]);
+    dot.remove();addAIMsg('b',resp);
+  }catch(e){dot.remove();addAIMsg('b','エラー: '+e.message);}
+}
+
+// ═══════════════════════════════════════
+// VIEW
+// ═══════════════════════════════════════
+function zb(f){
+  var cx=CV.width/2,cy=CV.height/2;
+  var ns=Math.max(.1,Math.min(10,ST.sc*f));
+  ST.vx=cx-(cx-ST.vx)/ST.sc*ns;ST.vy=cy-(cy-ST.vy)/ST.sc*ns;ST.sc=ns;renderCV();
+}
+function resetView(){ST.vx=40;ST.vy=40;ST.sc=1;renderCV();}
+
+// ═══════════════════════════════════════
+// WIZARD
+// ═══════════════════════════════════════
+var WZ_TYPE='2f',WZ_STEP=0;
+function wzSelType(t){
+  WZ_TYPE=t;
+  Object.keys(BLDG_TYPES).forEach(function(k){document.getElementById('wbt_'+k).classList.toggle('on',k===t);});
+}
+function wzCalc(){
+  var w=parseInt(document.getElementById('wzW').value)||10800;
+  var d=parseInt(document.getElementById('wzD').value)||8100;
+  var tsubo=Math.round(w*d/1000000/3.305785*10)/10;
+  document.getElementById('wzCalcD').textContent=w+'×'+d+'mm ≈ '+tsubo+'坪';
+}
+function wzNext(){
+  WZ_STEP++;
+  [0,1,2].forEach(function(i){
+    document.getElementById('ws'+i).classList.toggle('on',i===WZ_STEP);
+    document.getElementById('wd'+i).classList.toggle('on',i<=WZ_STEP);
+  });
+  document.getElementById('wzBar').style.width=Math.round((WZ_STEP+1)/3*100)+'%';
+}
+function wzSkip(){wzFinish();}
+function wzFinish(){
+  BLDG_TYPE=WZ_TYPE;
+  ST.bldg.w=parseInt(document.getElementById('wzW').value)||10800;
+  ST.bldg.d=parseInt(document.getElementById('wzD').value)||8100;
+  ST.mod=parseInt(document.getElementById('wzMod').value)||900;
+  localStorage.setItem('wz_done','1');
+  document.getElementById('WZ').classList.remove('on');
+  buildFloorSW();buildQP();renderCV();
+  document.getElementById('QP').classList.remove('collapsed');
+  toast(BLDG_TYPES[BLDG_TYPE].icon+' '+BLDG_TYPES[BLDG_TYPE].label+' 設定完了！');
+}
+
+// ═══════════════════════════════════════
+// SAVE
+// ═══════════════════════════════════════
+function saveLocal(){
+  localStorage.setItem('v12_data',JSON.stringify({rooms:ST.rooms,walls:ST.walls,openings:ST.openings,columns:ST.columns,labels:ST.labels,axes:ST.axes,bldg:ST.bldg,mod:ST.mod,bldgType:BLDG_TYPE}));
+  toast('💾 ローカルに保存しました');
+}
+function loadLocal(){
+  var d=localStorage.getItem('v12_data');if(!d)return;
+  try{
+    var p=JSON.parse(d);
+    Object.assign(ST,p);BLDG_TYPE=p.bldgType||'2f';
+    buildFloorSW();renderCV();toast('📂 読み込みました');
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+function showHint(t){var h=document.getElementById('cvHint');if(h){h.textContent=t;h.style.display='block';}}
+function hideHint(){var h=document.getElementById('cvHint');if(h)h.style.display='none';}
+function showLoad(t,s){document.getElementById('lt').textContent=t||'処理中…';document.getElementById('ls').textContent=s||'';document.getElementById('LD').classList.add('on');}
+function hideLoad(){document.getElementById('LD').classList.remove('on');}
+var _TT=null;
+function toast(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('on');clearTimeout(_TT);_TT=setTimeout(function(){e.classList.remove('on');},2800);}
+function showSnap(m){var e=document.getElementById('snapF');e.textContent=m;e.classList.add('on');setTimeout(function(){e.classList.remove('on');},1300);}
+// Close edge menu on outside click
+document.addEventListener('pointerdown',function(e){
+  var em=document.getElementById('EM');
+  if(em.classList.contains('on')&&!em.contains(e.target))em.classList.remove('on');
+});
+</script>
+</body>
+</html>

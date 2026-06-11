@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>AI図面Pro v12</title>
+<style>
+:root{
+  --bg:#F0F6FF;--card:#FFFFFF;
+  --a:#0E5EA8;--a2:#087840;--a3:#B83008;
+  --tx:#0C1E30;--tx2:#2A4A60;--tx3:#4A6A88;
+  --bdr:#A8C4DE;--bdr2:#C8DCF0;
+  --hdr1:#1A3A5C;--hdr2:#0D5C8A;
+  --undo:rgba(200,60,16,.3);
+  --shadow:0 2px 12px rgba(14,94,168,.15);
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
+  user-select:none;-webkit-user-select:none;
+  touch-action:manipulation;}
+body{background:#F4F8FF;color:var(--tx);
+  font-family:'Hiragino Kaku Gothic ProN',Meiryo,sans-serif;
+  font-size:14px;overflow:hidden;height:100dvh;display:flex;flex-direction:column;}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#0A2040,#0D5C8A,#1A3A5C);
+  display:flex;align-items:center;justify-content:center;padding:20px;}
+#loginScreen.hidden{display:none;}
+.lcard{background:#fff;border-radius:18px;padding:32px 26px;width:min(360px,100%);box-shadow:0 24px 60px rgba(0,0,0,.35);}
+.llogo{text-align:center;margin-bottom:24px;}
+.llogo .li{font-size:46px;display:block;margin-bottom:8px;}
+.llogo h1{color:var(--tx);font-size:20px;font-weight:800;letter-spacing:2px;}
+.llogo p{color:var(--tx3);font-size:11px;margin-top:3px;}
+.lf{margin-bottom:13px;}
+.lf label{display:block;font-size:11px;font-weight:700;color:var(--tx3);margin-bottom:4px;letter-spacing:1px;}
+.lf input{width:100%;padding:12px 13px;border:1.5px solid var(--bdr);border-radius:8px;font-size:16px;outline:none;background:var(--bg);font-family:inherit;color:var(--tx);}
+.lf input:focus{border-color:var(--a);background:#fff;}
+.lbtn{width:100%;padding:14px;background:linear-gradient(135deg,var(--hdr1),var(--hdr2));color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.lerr{color:var(--a3);font-size:12px;text-align:center;margin-top:7px;min-height:16px;}
+
+/* APP BAR */
+#appBar{background:linear-gradient(135deg,var(--hdr1),var(--hdr2));
+  padding:5px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+#appBar span{color:#E8F4FF;font-size:12px;font-weight:700;}
+.ab-btns{display:flex;gap:6px;}
+.ab-btn{background:rgba(255,255,255,.15);border:none;color:#E8F4FF;font-size:11px;padding:5px 11px;border-radius:12px;cursor:pointer;}
+
+/* HEADER */
+#hdr{background:linear-gradient(135deg,var(--hdr1),var(--hdr2));
+  padding:0 10px;height:46px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+#undoBtn{background:var(--undo);border:1px solid rgba(200,60,16,.4);color:#FFD0B0;
+  font-size:17px;font-weight:700;width:36px;height:32px;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo{color:#E8F4FF;font-size:13px;font-weight:800;letter-spacing:1px;}
+.sp{flex:1;}
+#modSel{background:rgba(255,255,255,.12);border:none;color:#E8F4FF;
+  font-size:12px;font-weight:700;padding:6px 12px;border-radius:16px;cursor:pointer;}
+#modSel option{color:var(--tx);background:#fff;}
+#cloudBtn,#adminBtn2{background:rgba(255,255,255,.15);border:none;color:#E8F4FF;
+  font-size:18px;width:34px;height:32px;border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;}
+
+/* AI BAR */
+#aiBar{background:#fff;border-bottom:1px solid var(--bdr2);flex-shrink:0;padding:7px 10px 5px;}
+.ai-tabs{display:flex;gap:5px;margin-bottom:6px;}
+.ai-tab{font-size:11px;font-weight:700;padding:4px 10px;border-radius:14px;
+  border:1px solid var(--bdr);background:var(--bg);color:var(--tx3);cursor:pointer;}
+.ai-tab.active{background:var(--a);color:#fff;border-color:var(--a);}
+.ai-row{display:flex;gap:5px;align-items:center;}
+#aiMic{background:var(--bg);border:1px solid var(--bdr);color:var(--tx3);
+  width:34px;height:34px;border-radius:8px;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#aiMic.on{background:#FFEEEE;border-color:var(--a3);color:var(--a3);}
+#aiInput{flex:1;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;
+  padding:7px 10px;font-size:14px;outline:none;font-family:inherit;color:var(--tx);}
+#aiInput:focus{border-color:var(--a);background:#fff;}
+#aiSend{background:var(--a);border:none;color:#fff;width:34px;height:34px;
+  border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#aiSearch{background:var(--a2);border:none;color:#fff;font-size:11px;font-weight:700;
+  padding:0 9px;height:34px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.ai-tags{display:flex;gap:4px;margin-top:5px;overflow-x:auto;padding-bottom:1px;}
+.ai-tags::-webkit-scrollbar{display:none;}
+.atag{font-size:10px;font-weight:600;padding:4px 8px;border-radius:11px;
+  border:1px solid var(--bdr);background:var(--bg);color:var(--tx2);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+#aiResult{background:#EEF6FF;border-bottom:1px solid var(--bdr2);
+  padding:8px 12px;font-size:12px;color:var(--tx2);line-height:1.65;
+  max-height:110px;overflow-y:auto;display:none;}
+#aiResult.show{display:block;}
+.adot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--a);margin:0 2px;animation:ad .8s infinite;}
+.adot:nth-child(2){animation-delay:.2s;}.adot:nth-child(3){animation-delay:.4s;}
+@keyframes ad{0%,80%,100%{transform:scale(.4);opacity:.3}40%{transform:scale(1);opacity:1}}
+
+/* CANVAS */
+#canvasWrap{flex:1;position:relative;overflow:hidden;}
+#cv{position:absolute;inset:0;touch-action:none;display:block;}
+
+/* FLOOR TABS */
+#floorTabs{position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:4px;z-index:10;}
+.ft{width:34px;height:30px;border-radius:8px;border:1px solid var(--bdr);
+  background:rgba(255,255,255,.92);color:var(--tx3);font-size:11px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
+.ft.active{background:var(--a);color:#fff;border-color:var(--a);}
+
+/* ZOOM CONTROLS */
+#zoomCtrl{position:absolute;bottom:10px;right:10px;display:flex;flex-direction:column;gap:5px;z-index:10;}
+.zb{width:42px;height:42px;border-radius:11px;border:1px solid var(--bdr);
+  background:rgba(255,255,255,.94);color:var(--tx2);font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
+.zb:active{background:var(--a);color:#fff;}
+
+/* MODULE SELECTOR */
+#modBar{position:absolute;top:8px;right:8px;z-index:10;
+  background:rgba(255,255,255,.94);border:1px solid var(--bdr2);
+  border-radius:10px;padding:5px 8px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:3px;}
+#modBar label{font-size:9px;font-weight:700;color:var(--tx3);}
+#modBar select{font-size:11px;font-weight:700;color:var(--a);background:transparent;
+  border:none;outline:none;cursor:pointer;padding:0;}
+
+/* LOCK BAR */
+#lockBar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  display:none;z-index:20;background:rgba(255,255,255,.96);
+  border-radius:14px;padding:8px 14px;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.2);
+  border:1px solid var(--bdr2);align-items:center;}
+#lockBar.show{display:flex;}
+#lockBar .lname{font-size:12px;font-weight:700;color:var(--tx2);}
+#lockBtn{background:var(--a2);border:none;color:#fff;font-size:13px;font-weight:700;
+  padding:9px 18px;border-radius:10px;cursor:pointer;}
+#lockBtn:active{opacity:.8;}
+#cancelBtn{background:var(--bg);border:1px solid var(--bdr);color:var(--tx3);
+  font-size:12px;font-weight:700;padding:9px 14px;border-radius:10px;cursor:pointer;}
+
+/* PALETTE */
+#palette{background:#fff;border-top:1px solid var(--bdr2);flex-shrink:0;}
+#palToggle{width:100%;height:30px;background:var(--bg);border:none;border-bottom:1px solid var(--bdr2);
+  color:var(--tx3);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;}
+#palToggle .arr{transition:transform .2s;}
+#palette.collapsed #palToggle .arr{transform:rotate(180deg);}
+#palette.collapsed .pal-body{display:none;}
+.pal-cats{display:flex;overflow-x:auto;padding:4px 8px 0;border-bottom:1px solid var(--bdr2);}
+.pal-cats::-webkit-scrollbar{display:none;}
+.pc{font-size:10px;font-weight:700;padding:5px 9px;border-radius:9px 9px 0 0;
+  border:none;background:transparent;color:var(--tx3);cursor:pointer;white-space:nowrap;}
+.pc.active{background:var(--a);color:#fff;}
+.pal-chips{display:flex;gap:6px;padding:6px 8px 8px;overflow-x:auto;max-height:88px;}
+.pal-chips::-webkit-scrollbar{display:none;}
+.chip{width:70px;height:72px;border-radius:10px;border:1.5px solid var(--bdr2);
+  background:var(--bg);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:1px;cursor:pointer;flex-shrink:0;position:relative;overflow:hidden;
+  transition:border-color .1s,background .1s;}
+.chip:active{border-color:var(--a);background:#EEF6FF;}
+.chip-bar{position:absolute;top:0;left:0;right:0;height:3px;}
+.chip-ico{font-size:22px;}
+.chip-name{font-size:9px;font-weight:700;color:var(--tx2);text-align:center;line-height:1.2;padding:0 3px;}
+.chip-sz{font-size:8px;color:var(--tx3);}
+
+/* DIMENSION MODAL */
+#dimModal{display:none;position:fixed;inset:0;z-index:8000;
+  background:rgba(10,30,60,.6);align-items:flex-end;justify-content:center;padding:0;}
+#dimModal.open{display:flex;}
+.dim-card{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;
+  width:100%;max-width:480px;box-shadow:0 -8px 40px rgba(0,0,0,.2);}
+.dim-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.dim-h h3{font-size:16px;font-weight:800;}
+.dim-close{background:none;border:none;font-size:22px;cursor:pointer;color:#999;width:32px;height:32px;}
+.dim-row{display:flex;gap:10px;margin-bottom:14px;}
+.dim-f{flex:1;}
+.dim-f label{display:block;font-size:11px;font-weight:700;color:var(--tx3);margin-bottom:5px;}
+.dim-f input{width:100%;padding:12px;border:1.5px solid var(--bdr);border-radius:9px;
+  font-size:18px;font-weight:700;text-align:center;outline:none;background:var(--bg);
+  font-family:inherit;color:var(--tx);}
+.dim-f input:focus{border-color:var(--a);background:#fff;}
+.dim-area{text-align:center;font-size:13px;font-weight:700;color:var(--a);
+  background:var(--bg);border-radius:8px;padding:9px;margin-bottom:16px;}
+.dim-presets{margin-bottom:16px;}
+.dim-presets label{font-size:11px;font-weight:700;color:var(--tx3);display:block;margin-bottom:6px;}
+.dim-preset-btns{display:flex;gap:5px;flex-wrap:wrap;}
+.dpb{font-size:10px;font-weight:700;padding:5px 9px;border-radius:8px;
+  border:1px solid var(--bdr);background:var(--bg);color:var(--tx2);cursor:pointer;}
+.dpb:active{background:var(--a);color:#fff;border-color:var(--a);}
+.dim-go{width:100%;padding:14px;background:linear-gradient(135deg,var(--hdr1),var(--hdr2));
+  color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;}
+.dim-go:active{opacity:.85;}
+
+/* EDIT MODAL */
+#editModal{display:none;position:fixed;inset:0;z-index:8000;
+  background:rgba(10,30,60,.6);align-items:flex-end;justify-content:center;}
+#editModal.open{display:flex;}
+.edit-card{background:#fff;border-radius:20px 20px 0 0;padding:22px 20px 32px;
+  width:100%;max-width:480px;}
+.edit-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.edit-h h3{font-size:15px;font-weight:800;}
+.edit-close{background:none;border:none;font-size:22px;cursor:pointer;color:#999;}
+.ef{margin-bottom:12px;}
+.ef label{display:block;font-size:11px;font-weight:700;color:var(--tx3);margin-bottom:4px;}
+.ef input{width:100%;padding:11px 12px;border:1.5px solid var(--bdr);border-radius:8px;
+  font-size:16px;outline:none;background:var(--bg);font-family:inherit;color:var(--tx);}
+.ef input:focus{border-color:var(--a);}
+.edit-area{font-size:12px;font-weight:700;color:var(--a);text-align:center;margin-bottom:12px;}
+.edit-btns{display:flex;gap:8px;}
+.edit-apply{flex:1;padding:13px;background:linear-gradient(135deg,var(--hdr1),var(--hdr2));
+  color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+.edit-del{padding:13px 16px;background:#FFF0EE;border:1px solid var(--a3);
+  color:var(--a3);border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+
+/* ADMIN */
+#adminPanel{display:none;position:fixed;inset:0;z-index:9000;
+  background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;}
+#adminPanel.open{display:flex;}
+.adm-card{background:#fff;border-radius:16px;padding:22px 20px;
+  width:min(400px,100%);max-height:88dvh;overflow-y:auto;}
+.adm-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.adm-h h2{font-size:15px;font-weight:700;}
+.adm-close{background:none;border:none;font-size:22px;cursor:pointer;color:#999;}
+.af{margin-bottom:11px;}
+.af label{display:block;font-size:11px;font-weight:700;color:var(--tx3);margin-bottom:4px;}
+.af input{width:100%;padding:10px 12px;border:1.5px solid var(--bdr);border-radius:7px;
+  font-size:15px;background:var(--bg);font-family:inherit;outline:none;}
+.af input:focus{border-color:var(--a);}
+.adm-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--hdr1),var(--hdr2));
+  color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
+.adm-err{color:var(--a3);font-size:12px;min-height:16px;margin-bottom:8px;text-align:center;}
+
+/* TOAST */
+#toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);
+  background:rgba(14,94,168,.92);color:#fff;padding:8px 18px;border-radius:20px;
+  font-size:12px;font-weight:700;z-index:9990;pointer-events:none;
+  opacity:0;transition:opacity .2s;white-space:nowrap;}
+#toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- Firebase -->
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,onAuthStateChanged}
+  from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import{getFirestore,collection,doc,setDoc,getDoc,getDocs,deleteDoc,serverTimestamp}
+  from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const app=initializeApp({
+  apiKey:"AIzaSyCVk2miG5TK1ffTofXLh0hHgeSbOvmIgZ8",
+  authDomain:"kensetsu-nippo-842a2.firebaseapp.com",
+  projectId:"kensetsu-nippo-842a2",
+  storageBucket:"kensetsu-nippo-842a2.firebasestorage.app",
+  messagingSenderId:"702880974315",
+  appId:"1:702880974315:web:985321dc9180046629c5ae"
+});
+const auth=getAuth(app);const db=getFirestore(app);
+window.__fb={auth,db,signInWithEmailAndPassword,createUserWithEmailAndPassword,
+  signOut,onAuthStateChanged,collection,doc,setDoc,getDoc,getDocs,deleteDoc,serverTimestamp};
+window.dispatchEvent(new Event('fbReady'));
+</script>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="lcard">
+    <div class="llogo"><span class="li">🏗️</span><h1>AI図面Pro</h1><p>v12 — CAD貼り付け型</p></div>
+    <div class="lf"><label>メールアドレス</label>
+      <input type="email" id="lMail" autocomplete="email" placeholder="example@company.com"></div>
+    <div class="lf"><label>パスワード</label>
+      <input type="password" id="lPass" autocomplete="current-password" placeholder="パスワード"
+        onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="lerr" id="lErr"></div>
+    <button class="lbtn" onclick="doLogin()">🔑 ログイン</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appBar" style="display:none">
+  <span>🏗️ AI図面Pro v12</span>
+  <div class="ab-btns">
+    <button class="ab-btn" id="admBtn" style="display:none" onclick="openAdmin()">👤 管理</button>
+    <button class="ab-btn" onclick="doLogout()">ログアウト</button>
+  </div>
+</div>
+
+<div id="hdr" style="display:none">
+  <button id="undoBtn" onclick="doUndo()">↩</button>
+  <span class="logo">AI図面Pro</span>
+  <span class="sp"></span>
+  <button id="cloudBtn" onclick="saveProj()" style="background:rgba(255,255,255,.15);border:none;color:#E8F4FF;font-size:18px;width:34px;height:32px;border-radius:8px;cursor:pointer;">☁️</button>
+</div>
+
+<div id="aiBar" style="display:none">
+  <div class="ai-tabs">
+    <button class="ai-tab active" id="tab0" onclick="setTab(0)">🏠 間取り生成</button>
+    <button class="ai-tab" id="tab1" onclick="setTab(1)">🔍 建材・法規</button>
+    <button class="ai-tab" id="tab2" onclick="setTab(2)">🌐 URL参照</button>
+  </div>
+  <div class="ai-row">
+    <button id="aiMic" onclick="toggleMic()">🎤</button>
+    <input id="aiInput" type="text" placeholder="間取りの条件を入力…">
+    <button id="aiSearch" onclick="doAI(true)">🔍+AI</button>
+    <button id="aiSend" onclick="doAI(false)">✨</button>
+  </div>
+  <div class="ai-tags" id="aiTags"></div>
+  <div id="urlRow" style="display:none;margin-top:5px;">
+    <input id="urlInput" type="url" placeholder="https://…"
+      style="width:100%;padding:6px 10px;border:1px solid var(--bdr);border-radius:7px;font-size:13px;background:var(--bg);outline:none;font-family:inherit;">
+    <div style="display:flex;gap:4px;margin-top:4px;overflow-x:auto;" id="urlPresets"></div>
+  </div>
+</div>
+<div id="aiResult"></div>
+
+<div id="canvasWrap" style="display:none">
+  <canvas id="cv"></canvas>
+
+  <!-- Floor tabs -->
+  <div id="floorTabs">
+    <button class="ft active" id="ft1" onclick="setFloor(1)">1F</button>
+    <button class="ft" id="ft2" onclick="setFloor(2)">2F</button>
+    <button class="ft" id="ft3" onclick="setFloor(3)">3F</button>
+    <button class="ft" id="ftR" onclick="setFloor('R')">RF</button>
+  </div>
+
+  <!-- Module selector -->
+  <div id="modBar">
+    <label>モジュール</label>
+    <select id="modSel" onchange="changeMod()">
+      <option value="900">尺 900mm</option>
+      <option value="910" selected>M 910mm</option>
+      <option value="1000">1000mm</option>
+    </select>
+  </div>
+
+  <!-- Zoom -->
+  <div id="zoomCtrl">
+    <button class="zb" onclick="zoom(1.25)">＋</button>
+    <button class="zb" onclick="zoom(0.8)">－</button>
+    <button class="zb" onclick="resetView()">↺</button>
+  </div>
+
+  <!-- Lock bar -->
+  <div id="lockBar">
+    <span class="lname" id="lockName">部屋</span>
+    <button id="cancelBtn" onclick="cancelPlace()">✕ キャンセル</button>
+    <button id="lockBtn" onclick="lockPlace()">🔒 固定</button>
+  </div>
+</div>
+
+<div id="palette" style="display:none">
+  <button id="palToggle" onclick="togglePal()">
+    <span class="arr">▲</span><span id="palLabel">　🛋️ 居室</span>
+  </button>
+  <div class="pal-body">
+    <div class="pal-cats" id="palCats"></div>
+    <div class="pal-chips" id="palChips"></div>
+  </div>
+</div>
+
+<!-- Dimension Modal -->
+<div id="dimModal">
+  <div class="dim-card">
+    <div class="dim-h">
+      <h3 id="dimTitle">部屋の寸法を設定</h3>
+      <button class="dim-close" onclick="closeDim()">✕</button>
+    </div>
+    <div class="dim-row">
+      <div class="dim-f">
+        <label>幅 (mm)</label>
+        <input type="number" id="dimW" value="3600" oninput="updateDimArea()">
+      </div>
+      <div class="dim-f">
+        <label>奥行 (mm)</label>
+        <input type="number" id="dimD" value="4500" oninput="updateDimArea()">
+      </div>
+    </div>
+    <div class="dim-area" id="dimArea">面積: 16.2㎡ / 9.8帖</div>
+    <div class="dim-presets">
+      <label>プリセット</label>
+      <div class="dim-preset-btns" id="dimPresets"></div>
+    </div>
+    <button class="dim-go" onclick="startPlace()">📐 配置する →</button>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal">
+  <div class="edit-card">
+    <div class="edit-h">
+      <h3 id="editTitle">部屋を編集</h3>
+      <button class="edit-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="ef"><label>部屋名</label><input type="text" id="editName"></div>
+    <div style="display:flex;gap:8px;">
+      <div class="ef" style="flex:1"><label>幅 (mm)</label><input type="number" id="editW" oninput="updateEditArea()"></div>
+      <div class="ef" style="flex:1"><label>奥行 (mm)</label><input type="number" id="editD" oninput="updateEditArea()"></div>
+    </div>
+    <div class="edit-area" id="editArea"></div>
+    <div class="edit-btns">
+      <button class="edit-apply" onclick="applyEdit()">✅ 適用</button>
+      <button class="edit-del" onclick="deleteRoom()">🗑 削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Wizard -->
+<div id="wizModal" style="display:none;position:fixed;inset:0;z-index:8500;background:rgba(10,30,60,.7);align-items:flex-end;justify-content:center;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:26px 20px 36px;width:100%;max-width:480px;">
+    <div style="text-align:center;margin-bottom:18px;">
+      <div style="font-size:36px;">🏗️</div>
+      <div style="font-size:17px;font-weight:800;margin-top:6px;">建物サイズを入力</div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:4px;">図面全体がキャンバスに自動フィットします</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <div style="flex:1;">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--tx3);margin-bottom:5px;">建物 幅 (mm)</label>
+        <input type="number" id="wizW" value="10920" oninput="calcWizTsubo()"
+          style="width:100%;padding:13px;border:1.5px solid var(--bdr);border-radius:9px;font-size:20px;font-weight:700;text-align:center;outline:none;background:var(--bg);font-family:inherit;color:var(--tx);">
+      </div>
+      <div style="flex:1;">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--tx3);margin-bottom:5px;">建物 奥行 (mm)</label>
+        <input type="number" id="wizD" value="8190" oninput="calcWizTsubo()"
+          style="width:100%;padding:13px;border:1.5px solid var(--bdr);border-radius:9px;font-size:20px;font-weight:700;text-align:center;outline:none;background:var(--bg);font-family:inherit;color:var(--tx);">
+      </div>
+    </div>
+    <div id="wizTsubo" style="text-align:center;font-size:13px;font-weight:700;color:var(--a);background:var(--bg);border-radius:8px;padding:9px;margin-bottom:14px;">約 27.2坪（89.9㎡）</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;">
+      <button onclick="setWizPreset(8190,7280)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);font-size:11px;font-weight:700;cursor:pointer;">20坪 8190×7280</button>
+      <button onclick="setWizPreset(10920,8190)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);font-size:11px;font-weight:700;cursor:pointer;">27坪 10920×8190</button>
+      <button onclick="setWizPreset(12740,9100)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);font-size:11px;font-weight:700;cursor:pointer;">35坪 12740×9100</button>
+      <button onclick="setWizPreset(14560,10920)" style="padding:7px 12px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);font-size:11px;font-weight:700;cursor:pointer;">47坪 14560×10920</button>
+    </div>
+    <button onclick="applyWizard()" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--hdr1),var(--hdr2));color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;">✅ 図面を開始する</button>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel">
+  <div class="adm-card">
+    <div class="adm-h"><h2>👤 ユーザー管理</h2>
+      <button class="adm-close" onclick="closeAdmin()">✕</button></div>
+    <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:10px;">➕ 新規ユーザー</div>
+      <div class="af"><label>表示名</label><input type="text" id="nuName" placeholder="山田 太郎"></div>
+      <div class="af"><label>メール</label><input type="email" id="nuMail" placeholder="example@co.jp"></div>
+      <div class="af"><label>仮パスワード</label>
+        <div style="position:relative;">
+          <input type="text" id="nuPass" placeholder="Temp1234!">
+          <button onclick="genPass()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--a);color:#fff;border:none;border-radius:5px;padding:4px 8px;font-size:10px;cursor:pointer;">自動生成</button>
+        </div>
+      </div>
+      <div class="adm-err" id="nuErr"></div>
+      <button class="adm-btn" onclick="addUser()">登録する</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:12px;font-weight:700;">📋 ユーザー一覧</div>
+      <button onclick="loadUsers()" style="background:var(--bg);border:1px solid var(--bdr);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;">🔄</button>
+    </div>
+    <div id="userList" style="font-size:12px;color:var(--tx3);line-height:2;">読み込み中...</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+var FB_BASE='https://us-central1-kensetsu-nippo-842a2.cloudfunctions.net';
+var ADMIN_EMAIL='heartshouseinc@gmail.com';
+
+// ===== STATE =====
+var ST={
+  floor:1,mod:910,
+  bldgW:10920,bldgD:8190, // 建物外形（mm）
+  rooms:{1:[],2:[],3:[],'R':[]},
+  vx:60,vy:60,sc:1,
+  nid:1,
+};
+var HIST=[];
+var _user=null,_isAdmin=false;
+var _busy=false,_aiTab=0;
+var _placing=null;
+var _selectedChip=null;
+var _tempRoom=null;
+var _tapRoom=null; // タップ候補（ピンチと区別用）
+var _editId=null;
+var _dragActive=false;
+var _pinch={on:false,d0:0,sc0:1};
+var _pan={on:false,x0:0,y0:0,vx0:0,vy0:0};
+var CV,CTX;
+var ROOM_COLORS=['#FFE4B5','#B5E4FF','#B5FFD0','#FFB5E4','#E4B5FF','#FFD0B5','#D0FFE4','#B5D0FF','#FFEEBB','#BBF0FF'];
+
+// ===== FIREBASE =====
+function fb(){return window.__fb;}
+window.addEventListener('fbReady',function(){
+  fb().onAuthStateChanged(fb().auth,function(u){
+    if(u){_user=u;_isAdmin=u.email===ADMIN_EMAIL;showApp();}
+    else{_user=null;showLogin();}
+  });
+});
+function showLogin(){
+  document.getElementById('loginScreen').style.display='flex';
+  ['appBar','hdr','aiBar','aiResult','canvasWrap','palette'].forEach(function(id){document.getElementById(id).style.display='none';});
+}
+function showApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appBar').style.display='flex';
+  document.getElementById('hdr').style.display='flex';
+  document.getElementById('aiBar').style.display='block';
+  document.getElementById('canvasWrap').style.display='block';
+  document.getElementById('palette').style.display='block';
+  if(_isAdmin)document.getElementById('admBtn').style.display='';
+  // 1フレーム待ってからinitApp（clientWidthが0になるのを防ぐ）
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      initApp();
+    });
+  });
+}
+async function doLogin(){
+  var e=document.getElementById('lMail').value.trim();
+  var p=document.getElementById('lPass').value;
+  var err=document.getElementById('lErr');
+  err.textContent='';
+  if(!e||!p){err.textContent='入力してください';return;}
+  try{await fb().signInWithEmailAndPassword(fb().auth,e,p);}
+  catch(ex){err.textContent='ログイン失敗: '+ex.message;}
+}
+async function doLogout(){await fb().signOut(fb().auth);}
+
+// ===== ADMIN =====
+function openAdmin(){document.getElementById('adminPanel').classList.add('open');loadUsers();}
+function closeAdmin(){document.getElementById('adminPanel').classList.remove('open');}
+function genPass(){
+  var c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+  var p='';for(var i=0;i<10;i++)p+=c[Math.floor(Math.random()*c.length)];
+  document.getElementById('nuPass').value=p;
+}
+async function addUser(){
+  var name=document.getElementById('nuName').value.trim();
+  var email=document.getElementById('nuMail').value.trim();
+  var pass=document.getElementById('nuPass').value;
+  var err=document.getElementById('nuErr');
+  err.textContent='';err.style.color='var(--a3)';
+  if(!name||!email||!pass){err.textContent='すべて入力してください';return;}
+  try{
+    var cr=await fb().createUserWithEmailAndPassword(fb().auth,email,pass);
+    await fb().setDoc(fb().doc(fb().db,'users',cr.user.uid),{name,email,createdAt:fb().serverTimestamp()});
+    err.style.color='var(--a2)';err.textContent='✅ 登録完了';
+    document.getElementById('nuName').value='';document.getElementById('nuMail').value='';document.getElementById('nuPass').value='';
+    loadUsers();
+  }catch(ex){err.textContent=ex.message;}
+}
+async function loadUsers(){
+  var ul=document.getElementById('userList');ul.textContent='読み込み中...';
+  try{
+    var snap=await fb().getDocs(fb().collection(fb().db,'users'));
+    if(snap.empty){ul.textContent='登録なし';return;}
+    var h='';
+    snap.forEach(function(d){
+      var u=d.data();
+      h+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--bdr2);">'
+        +'<div><b>'+u.name+'</b><br><span style="font-size:10px;">'+u.email+'</span></div>'
+        +'<button onclick="delUser(\''+d.id+'\')" style="background:none;border:1px solid var(--a3);color:var(--a3);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">削除</button></div>';
+    });
+    ul.innerHTML=h;
+  }catch(ex){ul.textContent='エラー: '+ex.message;}
+}
+async function delUser(uid){if(!confirm('削除しますか？'))return;await fb().deleteDoc(fb().doc(fb().db,'users',uid));loadUsers();}
+
+// ===== PALETTE DATA =====
+var PAL_CATS=[
+  {id:'living',label:'🛋️ 居室',color:'#4A90D9'},
+  {id:'water', label:'💧 水回り',color:'#2AB0C0'},
+  {id:'common',label:'🚶 共用',color:'#6AAA50'},
+  {id:'special',label:'🏗️ 特殊',color:'#E08040'},
+  {id:'door',  label:'🚪 建具',color:'#A060C0'},
+  {id:'struct',label:'⬛ 構造',color:'#606080'},
+];
+var PAL_ITEMS={
+  living:[
+    {ico:'🛋️',name:'リビング',  w:5400,d:4500,presets:[[3600,3600],[4500,4500],[5400,4500],[6300,4500]]},
+    {ico:'🍽️',name:'LDK',      w:7200,d:4500,presets:[[5400,4500],[6300,4500],[7200,4500],[8100,4500]]},
+    {ico:'🍴',name:'ダイニング',w:3600,d:3600,presets:[[2700,3600],[3600,3600],[4500,3600]]},
+    {ico:'🛏️',name:'主寝室',   w:4500,d:4500,presets:[[3600,4500],[4500,4500],[5400,4500]]},
+    {ico:'🛏️',name:'洋室6帖',  w:3600,d:3600,presets:[[2700,3600],[3600,3600],[4500,3600]]},
+    {ico:'🛏️',name:'洋室4.5帖',w:2730,d:3640,presets:[[2700,2700],[2730,3640],[3600,2700]]},
+    {ico:'🏯',name:'和室6帖',  w:3640,d:3640,presets:[[3640,3640],[4550,3640]]},
+    {ico:'🏯',name:'和室4.5帖',w:2730,d:3640,presets:[[2730,3640],[2730,2730]]},
+    {ico:'👧',name:'子供室①',  w:3600,d:3000,presets:[[2700,3000],[3600,3000],[3600,3600]]},
+    {ico:'👦',name:'子供室②',  w:3600,d:3000,presets:[[2700,3000],[3600,3000],[3600,3600]]},
+    {ico:'📚',name:'書斎',     w:2700,d:2700,presets:[[1800,2700],[2700,2700],[2700,3600]]},
+    {ico:'🍳',name:'キッチン',  w:2700,d:3600,presets:[[2700,3600],[3600,3600]]},
+  ],
+  water:[
+    {ico:'🛁',name:'UB1616',  w:1600,d:1600,presets:[[1600,1600]]},
+    {ico:'🛁',name:'UB1620',  w:1600,d:2000,presets:[[1600,2000]]},
+    {ico:'🛁',name:'UB1818',  w:1800,d:1800,presets:[[1800,1800]]},
+    {ico:'🚽',name:'トイレ',  w:900, d:1800,presets:[[900,1800],[900,1650]]},
+    {ico:'🪥',name:'洗面所',  w:1800,d:1800,presets:[[900,1800],[1800,1800]]},
+    {ico:'👗',name:'脱衣所',  w:1800,d:1800,presets:[[1800,1800],[1800,1650]]},
+    {ico:'👕',name:'洗濯室',  w:1800,d:1800,presets:[[1800,1800]]},
+    {ico:'🔧',name:'PS',      w:450, d:900, presets:[[450,900]]},
+  ],
+  common:[
+    {ico:'🚪',name:'玄関',    w:1800,d:1800,presets:[[1800,1800],[2700,1800]]},
+    {ico:'🏠',name:'玄関ホール',w:2700,d:2700,presets:[[1800,2700],[2700,2700]]},
+    {ico:'🚶',name:'廊下',    w:900, d:3600,presets:[[900,2700],[900,3600],[900,5400]]},
+    {ico:'🪜',name:'階段',    w:910, d:3640,presets:[[910,3640],[1820,2730]]},
+    {ico:'👗',name:'クローゼット',w:1800,d:900,presets:[[1800,900],[2700,900]]},
+    {ico:'📦',name:'納戸',    w:1800,d:1800,presets:[[900,1800],[1800,1800]]},
+    {ico:'👟',name:'シューズクローク',w:1800,d:1800,presets:[[900,1800],[1800,1800]]},
+    {ico:'🏠',name:'ホール',  w:2700,d:2700,presets:[[1800,2700],[2700,2700]]},
+  ],
+  special:[
+    {ico:'🚗',name:'ガレージ2台',w:5400,d:6000,presets:[[5400,6000]]},
+    {ico:'🚗',name:'ガレージ1台',w:2700,d:5400,presets:[[2700,5400]]},
+    {ico:'🌿',name:'ベランダ',   w:3600,d:900,presets:[[3600,900],[5400,900]]},
+    {ico:'🌿',name:'バルコニー', w:3600,d:1200,presets:[[3600,1200],[5400,1200]]},
+    {ico:'🌿',name:'RFバルコニー',w:5400,d:2700,presets:[[5400,2700]]},
+    {ico:'📦',name:'小屋裏',    w:3600,d:3600,presets:[[3600,3600]]},
+    {ico:'☀️',name:'サンルーム', w:2700,d:2700,presets:[[2700,2700]]},
+    {ico:'🏯',name:'和室+床の間',w:3640,d:3640,presets:[[3640,3640]]},
+  ],
+  door:[
+    {ico:'🚪',name:'片開き734', w:734, d:200,presets:[[734,200]]},
+    {ico:'🚪',name:'片開き754', w:754, d:200,presets:[[754,200]]},
+    {ico:'🚪',name:'片引き戸',  w:780, d:150,presets:[[780,150],[910,150]]},
+    {ico:'🚪',name:'引き違い',  w:1640,d:150,presets:[[1235,150],[1640,150]]},
+    {ico:'🚪',name:'折り戸',    w:900, d:150,presets:[[900,150]]},
+    {ico:'🪟',name:'窓W1235',   w:1235,d:150,presets:[[924,150],[1235,150]]},
+    {ico:'🪟',name:'窓W1640',   w:1640,d:150,presets:[[1235,150],[1640,150]]},
+    {ico:'🪟',name:'FIX窓',     w:1235,d:150,presets:[[1235,150]]},
+    {ico:'🔲',name:'シャッター', w:2400,d:150,presets:[[2400,150],[3600,150]]},
+  ],
+  struct:[
+    {ico:'⬛',name:'柱105', w:105,d:105,presets:[[105,105]]},
+    {ico:'⬛',name:'柱120', w:120,d:120,presets:[[120,120]]},
+    {ico:'⬛',name:'柱150', w:150,d:150,presets:[[150,150]]},
+    {ico:'➖',name:'外壁横', w:3600,d:150,presets:[[3600,150],[5400,150]]},
+    {ico:'|',name:'外壁縦', w:150,d:3600,presets:[[150,3600],[150,5400]]},
+    {ico:'➖',name:'内壁横', w:3600,d:120,presets:[[3600,120],[5400,120]]},
+    {ico:'|',name:'内壁縦', w:120,d:3600,presets:[[120,3600],[120,5400]]},
+  ],
+};
+var _palCat='living';
+var _curItem=null; // item being configured in dimModal
+
+// ===== AI =====
+var AI_TAGS=[
+  ['南玄関','ガレージ','UB+WC分離','廊下型','LDK20畳','主寝室WIC','和室','ベランダ','北階段','子供室2室'],
+  ['サッシ標準寸法JIS','壁量計算2025','断熱等級6','採光基準','ユニットバス規格','坪単価2025','階段法規','バリアフリー廊下','省エネZEH'],
+  ['YKK AP窓','LIXIL ドア','TOTO バス','国交省建基法','Panasonic住設'],
+];
+var URL_PRESETS=[
+  {label:'🪟 YKK AP',url:'https://www.ykkap.co.jp/consumer/products/window/',prompt:'窓・サッシ製品の寸法一覧を教えてください'},
+  {label:'🚪 LIXIL', url:'https://www.lixil.co.jp/lineup/door/',prompt:'ドア・建具の標準寸法と種類を教えてください'},
+  {label:'🛁 TOTO',  url:'https://jp.toto.com/products/bath/',prompt:'ユニットバスのサイズ規格一覧を教えてください'},
+  {label:'📐 国交省', url:'https://www.mlit.go.jp/jutakukentiku/build/index.html',prompt:'建築基準法の主要規定を教えてください',search:true},
+  {label:'🔧 Panasonic',url:'https://sumai.panasonic.jp/atterio/',prompt:'キッチン・浴室・洗面の標準寸法を教えてください'},
+];
+
+function setTab(n){
+  _aiTab=n;
+  for(var i=0;i<3;i++) document.getElementById('tab'+i).classList.toggle('active',i===n);
+  document.getElementById('urlRow').style.display=n===2?'block':'none';
+  var inp=document.getElementById('aiInput');
+  inp.placeholder=n===0?'間取りの条件を入力（例: LDK20畳 南玄関）':n===1?'建材・法規を検索…':'質問を入力…';
+  renderAITags();
+}
+function renderAITags(){
+  var el=document.getElementById('aiTags');el.innerHTML='';
+  AI_TAGS[_aiTab].forEach(function(tag){
+    var b=document.createElement('button');b.className='atag';b.textContent=tag;
+    b.onclick=function(){document.getElementById('aiInput').value=tag;doAI(_aiTab===1);};
+    el.appendChild(b);
+  });
+  if(_aiTab===2){
+    var el2=document.getElementById('urlPresets');el2.innerHTML='';
+    URL_PRESETS.forEach(function(p){
+      var b=document.createElement('button');b.className='atag';b.textContent=p.label;
+      b.onclick=function(){
+        document.getElementById('urlInput').value=p.url;
+        document.getElementById('aiInput').value=p.prompt;
+        doAI(!!p.search);
+      };
+      el2.appendChild(b);
+    });
+  }
+}
+
+async function callGemini(prompt,useSearch,urls){
+  var body={prompt,model:'gemini-2.5-flash',useSearch:!!useSearch};
+  if(urls&&urls.length) body.urls=urls;
+  var r=await fetch(FB_BASE+'/askClaude',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body),signal:AbortSignal.timeout(60000),
+  });
+  var d=await r.json();
+  return d?.candidates?.[0]?.content?.parts?.[0]?.text||d?.text||'応答なし';
+}
+async function doAI(useSearch){
+  var text=document.getElementById('aiInput').value.trim();
+  if(!text||_busy)return;
+  var url=_aiTab===2?document.getElementById('urlInput').value.trim():'';
+  _busy=true;
+  var re=document.getElementById('aiResult');
+  re.innerHTML='<span class="adot"></span><span class="adot"></span><span class="adot"></span> Gemini 思考中…';
+  re.classList.add('show');
+  try{
+    var sys='あなたは日本の一級建築士です。専門的に回答してください。\n';
+    if(_aiTab===0) sys+='間取り生成では部屋名・寸法・配置を箇条書きで。';
+    var resp=await callGemini(sys+text,useSearch,url?[url]:[]);
+    re.textContent=resp;
+    if(_aiTab===0) tryAutoLayout(resp);
+  }catch(ex){re.textContent='⚠️ エラー: '+ex.message;}
+  _busy=false;
+}
+function tryAutoLayout(text){
+  var lines=text.split('\n');var placed=0;var x=0,y=0;
+  lines.forEach(function(line){
+    var m=line.match(/([ぁ-んァ-ン一-龥a-zA-Z()（）\s]+?)\s+(\d{3,5})[×xX](\d{3,5})/);
+    if(m&&placed<12){
+      var name=m[1].trim().replace(/^[・\-\*\s]+/,'');
+      var w=parseInt(m[2]),h=parseInt(m[3]);
+      if(w>300&&w<20000&&h>300&&h<20000){
+        pushHist();
+        var id=ST.nid++;
+        var color=ROOM_COLORS[ST.rooms[ST.floor].length%ROOM_COLORS.length];
+        ST.rooms[ST.floor].push({id,x,y,w,h,name,ico:'🏠',color,locked:true});
+        x+=w+ST.mod;if(x>ST.bldg_w){x=0;y+=h+ST.mod;}
+        placed++;
+      }
+    }
+  });
+  if(placed>0){render();showToast('✅ '+placed+'部屋を自動配置');}
+}
+
+var _recog=null;
+function toggleMic(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){showToast('⚠️ 音声未対応');return;}
+  var btn=document.getElementById('aiMic');
+  if(_recog){_recog.stop();_recog=null;btn.classList.remove('on');return;}
+  var R=window.SpeechRecognition||window.webkitSpeechRecognition;
+  _recog=new R();_recog.lang='ja-JP';
+  _recog.onresult=function(e){document.getElementById('aiInput').value=e.results[0][0].transcript;};
+  _recog.onend=function(){_recog=null;btn.classList.remove('on');};
+  _recog.start();btn.classList.add('on');
+}
+
+// ===== INIT APP =====
+function initApp(){
+  initPalette();renderAITags();
+  CV=document.getElementById('cv');
+  CTX=CV.getContext('2d');
+  resizeCV();
+  initEvents();
+  // 起動時ウィザード
+  openWizard();
+}
+function resizeCV(){
+  var wrap=document.getElementById('canvasWrap');
+  CV.width=wrap.clientWidth;CV.height=wrap.clientHeight;
+  render();
+}
+window.addEventListener('resize',resizeCV);
+
+// ===== PALETTE =====
+function initPalette(){
+  var el=document.getElementById('palCats');el.innerHTML='';
+  PAL_CATS.forEach(function(c){
+    var b=document.createElement('button');b.className='pc'+(c.id===_palCat?' active':'');
+    b.textContent=c.label;
+    b.onclick=function(){setPalCat(c.id);};
+    el.appendChild(b);
+  });
+  renderChips();
+}
+function setPalCat(id){
+  _palCat=id;
+  document.querySelectorAll('.pc').forEach(function(el,i){el.classList.toggle('active',PAL_CATS[i].id===id);});
+  document.getElementById('palLabel').textContent='　'+PAL_CATS.find(function(c){return c.id===id;}).label;
+  renderChips();
+}
+function renderChips(){
+  var el=document.getElementById('palChips');el.innerHTML='';
+  var cat=PAL_CATS.find(function(c){return c.id===_palCat;});
+  (PAL_ITEMS[_palCat]||[]).forEach(function(item){
+    var chip=document.createElement('div');chip.className='chip';
+    chip.innerHTML='<div class="chip-bar" style="background:'+cat.color+'"></div>'
+      +'<div class="chip-ico">'+item.ico+'</div>'
+      +'<div class="chip-name">'+item.name+'</div>'
+      +'<div class="chip-sz">'+(item.d>200?item.w+'×'+item.d:item.w+'mm')+'</div>';
+    chip.addEventListener('click',function(e){
+      e.stopPropagation();
+      selectChip(item,chip);
+    });
+    el.appendChild(chip);
+  });
+}
+function selectChip(item,chipEl){
+  _selectedChip=item;
+  // ハイライト
+  document.querySelectorAll('.chip').forEach(function(c){c.style.borderColor='';c.style.background='';});
+  chipEl.style.borderColor='var(--a)';
+  chipEl.style.background='#D0E8FF';
+  showToast(item.ico+' '+item.name+' — キャンバスをタップして配置');
+}
+function togglePal(){
+  document.getElementById('palette').classList.toggle('collapsed');
+}
+
+// ===== DIMENSION MODAL =====
+function openDim(item){
+  _curItem=item;
+  document.getElementById('dimTitle').textContent=item.ico+' '+item.name+' — 寸法設定';
+  document.getElementById('dimW').value=item.w;
+  document.getElementById('dimD').value=item.d||item.w;
+  updateDimArea();
+  // presets
+  var el=document.getElementById('dimPresets');el.innerHTML='';
+  (item.presets||[]).forEach(function(p){
+    var b=document.createElement('button');b.className='dpb';
+    b.textContent=p[0]+'×'+p[1];
+    b.onclick=function(){
+      document.getElementById('dimW').value=p[0];
+      document.getElementById('dimD').value=p[1];
+      updateDimArea();
+    };
+    el.appendChild(b);
+  });
+  document.getElementById('dimModal').classList.add('open');
+}
+function closeDim(){document.getElementById('dimModal').classList.remove('open');_curItem=null;}
+function updateDimArea(){
+  var w=parseInt(document.getElementById('dimW').value)||0;
+  var d=parseInt(document.getElementById('dimD').value)||0;
+  var m2=(w/1000)*(d/1000);
+  var jo=m2/1.62;
+  document.getElementById('dimArea').textContent=
+    '面積: '+m2.toFixed(2)+'㎡ / '+jo.toFixed(1)+'帖　('+w+'×'+d+'mm)';
+}
+function startPlace(){
+  if(!_curItem)return;
+  var w=parseInt(document.getElementById('dimW').value)||_curItem.w;
+  var d=parseInt(document.getElementById('dimD').value)||_curItem.d||w;
+  closeDim();
+  // ゴーストをキャンバス中央に配置
+  var cx=CV.width/2,cy=CV.height/2;
+  var wx=Math.round((cx/ST.sc-ST.vx)/ST.mod)*ST.mod;
+  var wy=Math.round((cy/ST.sc-ST.vy)/ST.mod)*ST.mod;
+  _placing={
+    item:_curItem,w,d,x:wx,y:wy,
+    name:_curItem.name,ico:_curItem.ico,
+    color:ROOM_COLORS[ST.rooms[ST.floor].length%ROOM_COLORS.length],
+  };
+  document.getElementById('lockName').textContent=_curItem.ico+' '+_curItem.name;
+  document.getElementById('lockBar').classList.add('show');
+  render();
+  showToast('指でドラッグして位置を決めてください');
+}
+function lockPlace(){
+  if(!_tempRoom)return;
+  pushHist();
+  var id=ST.nid++;
+  ST.rooms[ST.floor].push({
+    id,x:_tempRoom.x,y:_tempRoom.y,
+    w:_tempRoom.w,h:_tempRoom.h,
+    name:_tempRoom.name,ico:_tempRoom.ico,
+    color:_tempRoom.color,locked:true,
+  });
+  _tempRoom=null;_selectedChip=null;
+  document.getElementById('lockBar').classList.remove('show');
+  document.querySelectorAll('.chip').forEach(function(c){c.style.borderColor='';c.style.background='';});
+  if(navigator.vibrate)navigator.vibrate([30,20,30]);
+  showToast('🔒 固定しました');
+  render();
+}
+function cancelPlace(){
+  _tempRoom=null;_selectedChip=null;
+  document.getElementById('lockBar').classList.remove('show');
+  document.querySelectorAll('.chip').forEach(function(c){c.style.borderColor='';c.style.background='';});
+  render();
+}
+
+// ===== EDIT MODAL =====
+function openEdit(room){
+  _editId=room.id;
+  document.getElementById('editTitle').textContent=room.ico+' '+room.name+' を編集';
+  document.getElementById('editName').value=room.name;
+  document.getElementById('editW').value=room.w;
+  document.getElementById('editD').value=room.h;
+  updateEditArea();
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEdit(){document.getElementById('editModal').classList.remove('open');_editId=null;}
+function updateEditArea(){
+  var w=parseInt(document.getElementById('editW').value)||0;
+  var d=parseInt(document.getElementById('editD').value)||0;
+  var m2=(w/1000)*(d/1000);
+  document.getElementById('editArea').textContent=m2.toFixed(2)+'㎡ / '+(m2/1.62).toFixed(1)+'帖';
+}
+function applyEdit(){
+  var rooms=ST.rooms[ST.floor];
+  var r=rooms.find(function(r){return r.id===_editId;});
+  if(!r)return;
+  pushHist();
+  r.name=document.getElementById('editName').value||r.name;
+  r.w=parseInt(document.getElementById('editW').value)||r.w;
+  r.h=parseInt(document.getElementById('editD').value)||r.h;
+  closeEdit();render();showToast('✅ 更新しました');
+}
+function deleteRoom(){
+  if(!confirm('削除しますか？'))return;
+  pushHist();
+  ST.rooms[ST.floor]=ST.rooms[ST.floor].filter(function(r){return r.id!==_editId;});
+  closeEdit();render();showToast('🗑 削除しました');
+}
+
+// ===== FLOOR =====
+function setFloor(f){
+  ST.floor=f;
+  ['1','2','3','R'].forEach(function(n){
+    var el=document.getElementById('ft'+n);
+    if(el) el.classList.toggle('active',(n==='R'?'R':parseInt(n))===f);
+  });
+  render();
+}
+
+// ===== MOD =====
+function changeMod(){
+  ST.mod=parseInt(document.getElementById('modSel').value)||910;
+  render();
+}
+
+// ===== UNDO =====
+function pushHist(){
+  HIST.push(JSON.stringify(ST.rooms));
+  if(HIST.length>40)HIST.shift();
+}
+function doUndo(){
+  if(!HIST.length){showToast('これ以上戻れません');return;}
+  ST.rooms=JSON.parse(HIST.pop());
+  render();showToast('↩ 元に戻しました');
+}
+
+// ===== WIZARD =====
+function openWizard(){
+  calcWizTsubo();
+  var el=document.getElementById('wizModal');
+  el.style.display='flex';
+}
+function setWizPreset(w,d){
+  document.getElementById('wizW').value=w;
+  document.getElementById('wizD').value=d;
+  calcWizTsubo();
+}
+function calcWizTsubo(){
+  var w=parseInt(document.getElementById('wizW').value)||0;
+  var d=parseInt(document.getElementById('wizD').value)||0;
+  var m2=(w/1000)*(d/1000);
+  document.getElementById('wizTsubo').textContent='約 '+(m2/3.305).toFixed(1)+'坪（'+m2.toFixed(1)+'㎡）';
+}
+function applyWizard(){
+  ST.bldgW=parseInt(document.getElementById('wizW').value)||10920;
+  ST.bldgD=parseInt(document.getElementById('wizD').value)||8190;
+  document.getElementById('wizModal').style.display='none';
+  fitView();
+  render();
+  showToast('✅ 図面開始 — パーツをタップして配置してください');
+}
+function fitView(){
+  // 建物全体がキャンバスに余白付きで収まるスケールを計算
+  var wrap=document.getElementById('canvasWrap');
+  var W=wrap.clientWidth||CV.width;
+  var H=wrap.clientHeight||CV.height;
+  var pad=60; // 余白px
+  var scX=(W-pad*2)/(ST.bldgW);
+  var scY=(H-pad*2)/(ST.bldgD);
+  ST.sc=Math.min(scX,scY,2);
+  // 中央に配置
+  ST.vx=(W/2 - ST.bldgW*ST.sc/2)/ST.sc;
+  ST.vy=(H/2 - ST.bldgD*ST.sc/2)/ST.sc;
+}
+function zoom(r){ST.sc=Math.max(0.15,Math.min(6,ST.sc*r));render();}
+function resetView(){fitView();render();}
+
+// ===== CANVAS EVENTS =====
+function initEvents(){
+  CV.addEventListener('pointerdown',onDown,{passive:false});
+  CV.addEventListener('pointermove',onMove,{passive:false});
+  CV.addEventListener('pointerup',onUp,{passive:false});
+  CV.addEventListener('pointercancel',onUp,{passive:false});
+}
+var _ptrs={};
+function pt(e){return{x:e.clientX,y:e.clientY};}
+function cvXY(e){
+  var r=CV.getBoundingClientRect();
+  return{cx:e.clientX-r.left,cy:e.clientY-r.top};
+}
+function onDown(e){
+  e.preventDefault();
+  _ptrs[e.pointerId]=pt(e);
+  var pArr=Object.values(_ptrs);
+  if(pArr.length===2){
+    _pan.on=false;_tapRoom=null;
+    var dx=pArr[0].x-pArr[1].x,dy=pArr[0].y-pArr[1].y;
+    _pinch={on:true,wasActive:true,d0:Math.sqrt(dx*dx+dy*dy),sc0:ST.sc,vx0:ST.vx,vy0:ST.vy};
+    return;
+  }
+  var xy=cvXY(e);
+  var wx=snapMod(xy.cx/ST.sc-ST.vx);
+  var wy=snapMod(xy.cy/ST.sc-ST.vy);
+
+  // チップ選択中 → タップで仮配置
+  if(_selectedChip){
+    placeTemp(wx,wy);
+    return;
+  }
+  // 仮配置中 → タップで移動
+  if(_tempRoom){
+    _tempRoom.x=wx;_tempRoom.y=wy;
+    render();return;
+  }
+  // 固定済み部屋タップ → onUpで判定（ピンチと区別するため保留）
+  var hit=hitRoom(wx,wy);
+  if(hit){_tapRoom=hit;return;}
+  _tapRoom=null;
+  // パン
+  _pan={on:true,x0:e.clientX,y0:e.clientY,vx0:ST.vx,vy0:ST.vy};
+}
+function placeTemp(wx,wy){
+  var item=_selectedChip;
+  _tempRoom={
+    id:-1,
+    x:wx,y:wy,
+    w:item.w,h:item.d||item.w,
+    name:item.name,ico:item.ico,
+    color:ROOM_COLORS[ST.rooms[ST.floor].length%ROOM_COLORS.length],
+  };
+  document.getElementById('lockName').textContent=item.ico+' '+item.name;
+  document.getElementById('lockBar').classList.add('show');
+  render();
+}
+function onMove(e){
+  e.preventDefault();
+  _ptrs[e.pointerId]=pt(e);
+  var pArr=Object.values(_ptrs);
+  if(pArr.length===2&&_pinch.on){
+    var dx=pArr[0].x-pArr[1].x,dy=pArr[0].y-pArr[1].y;
+    var d=Math.sqrt(dx*dx+dy*dy);
+    ST.sc=Math.max(0.15,Math.min(6,_pinch.sc0*(d/_pinch.d0)));
+    render();return;
+  }
+  var xy=cvXY(e);
+  var wx=xy.cx/ST.sc-ST.vx,wy=xy.cy/ST.sc-ST.vy;
+  if(_placing){
+    // 常に追従（onDown後もonMoveで動く）
+    _placing.x=snapMod(wx-_placing.w/2);
+    _placing.y=snapMod(wy-_placing.d/2);
+    render();return;
+  }
+  if(_pan.on){
+    ST.vx=_pan.vx0+(e.clientX-_pan.x0)/ST.sc;
+    ST.vy=_pan.vy0+(e.clientY-_pan.y0)/ST.sc;
+    render();
+  }
+}
+var _lastTap={t:0,id:-1};
+function onUp(e){
+  delete _ptrs[e.pointerId];
+  if(Object.keys(_ptrs).length===0){
+    _pinch.on=false;_pan.on=false;
+    // ピンチだった場合はタップ判定しない
+    if(_pinch.wasActive){_pinch.wasActive=false;_tapRoom=null;return;}
+    // ダブルタップ判定
+    if(_tapRoom){
+      var now=Date.now();
+      if(now-_lastTap.t<400&&_lastTap.id===_tapRoom.id){
+        openEdit(_tapRoom);
+        _lastTap={t:0,id:-1};
+      } else {
+        _lastTap={t:now,id:_tapRoom.id};
+      }
+      _tapRoom=null;
+    }
+  }
+}
+function snapMod(v){return Math.round(v/ST.mod)*ST.mod;}
+function hitRoom(wx,wy){
+  var rooms=ST.rooms[ST.floor]||[];
+  for(var i=rooms.length-1;i>=0;i--){
+    var r=rooms[i];
+    if(wx>=r.x&&wx<=r.x+r.w&&wy>=r.y&&wy<=r.y+r.h)return r;
+  }return null;
+}
+
+// ===== RENDER =====
+function render(){
+  if(!CTX)return;
+  var W=CV.width,H=CV.height;
+  CTX.clearRect(0,0,W,H);
+  CTX.fillStyle='#F4F8FF';CTX.fillRect(0,0,W,H);
+  drawDots();
+  drawBldgOutline();
+  drawRooms();
+  if(_tempRoom)drawTempRoom();
+}
+function drawTempRoom(){
+  var r=_tempRoom;
+  var p=w2c(r.x,r.y);
+  var rw=r.w*ST.sc,rh=r.h*ST.sc;
+  CTX.save();
+  CTX.globalAlpha=0.6;
+  CTX.fillStyle=r.color||'#B5E4FF';
+  roundRect(p.x,p.y,rw,rh,6);CTX.fill();
+  CTX.globalAlpha=1;
+  CTX.strokeStyle='#0E5EA8';CTX.lineWidth=2.5;
+  CTX.setLineDash([8,4]);
+  roundRect(p.x,p.y,rw,rh,6);CTX.stroke();
+  CTX.setLineDash([]);
+  if(rw>40&&rh>30){
+    CTX.fillStyle='#0E5EA8';
+    var fs=Math.max(10,Math.min(15,rw/6));
+    CTX.font='bold '+fs+'px sans-serif';
+    CTX.textAlign='center';CTX.textBaseline='middle';
+    CTX.fillText(r.ico+' '+r.name,p.x+rw/2,p.y+rh/2-(rh>60?8:0));
+    if(rh>60){
+      CTX.font=(fs*0.75)+'px sans-serif';
+      CTX.fillText(r.w+'×'+r.h+'mm',p.x+rw/2,p.y+rh/2+fs*0.9);
+    }
+  }
+  CTX.restore();
+}
+function drawBldgOutline(){
+  if(!ST.bldgW||!ST.bldgD)return;
+  var p=w2c(0,0);
+  var bw=ST.bldgW*ST.sc,bd=ST.bldgD*ST.sc;
+  CTX.save();
+  CTX.strokeStyle='rgba(14,94,168,0.25)';
+  CTX.lineWidth=1.5;
+  CTX.setLineDash([8,5]);
+  CTX.strokeRect(p.x,p.y,bw,bd);
+  CTX.setLineDash([]);
+  // ラベル
+  CTX.fillStyle='rgba(14,94,168,0.35)';
+  CTX.font='bold 11px sans-serif';
+  CTX.textAlign='left';CTX.textBaseline='bottom';
+  CTX.fillText(ST.bldgW+'×'+ST.bldgD+'mm',p.x+4,p.y-3);
+  CTX.restore();
+}
+
+function drawDots(){
+  var mod=ST.mod*ST.sc;
+  // start from edge: find first dot position
+  var ox=((ST.vx*ST.sc)%mod+mod)%mod;
+  var oy=((ST.vy*ST.sc)%mod+mod)%mod;
+  CTX.fillStyle='rgba(80,130,200,0.35)';
+  var r=ST.sc>1.5?2.5:ST.sc>0.7?2:1.5;
+  for(var x=ox;x<=CV.width;x+=mod){
+    for(var y=oy;y<=CV.height;y+=mod){
+      CTX.beginPath();CTX.arc(x,y,r,0,Math.PI*2);CTX.fill();
+    }
+  }
+}
+
+function drawRooms(){
+  var rooms=ST.rooms[ST.floor]||[];
+  rooms.forEach(function(r){
+    var p=w2c(r.x,r.y);
+    var rw=r.w*ST.sc,rh=r.h*ST.sc;
+    // shadow
+    CTX.save();
+    CTX.shadowColor='rgba(14,94,168,.12)';CTX.shadowBlur=8;CTX.shadowOffsetY=3;
+    CTX.fillStyle=r.color||'#FFE4B5';
+    CTX.globalAlpha=0.82;
+    roundRect(p.x,p.y,rw,rh,6);CTX.fill();
+    CTX.restore();
+    // border
+    CTX.strokeStyle='rgba(60,100,160,.5)';CTX.lineWidth=1.5;
+    roundRect(p.x,p.y,rw,rh,6);CTX.stroke();
+    // label
+    if(rw>40&&rh>30){
+      CTX.fillStyle='#0C1E30';
+      var fs=Math.max(9,Math.min(15,rw/7));
+      CTX.font='bold '+fs+'px sans-serif';
+      CTX.textAlign='center';CTX.textBaseline='middle';
+      CTX.fillText(r.ico+' '+r.name,p.x+rw/2,p.y+rh/2-(rh>60?8:0));
+      if(rh>60){
+        CTX.fillStyle='#4A6A88';
+        CTX.font=(fs*0.75)+'px sans-serif';
+        CTX.fillText(r.w+'×'+r.h+'mm',p.x+rw/2,p.y+rh/2+fs*0.9);
+      }
+    }
+    // 🔒 mark
+    if(r.locked&&rw>30){
+      CTX.font='10px sans-serif';CTX.textAlign='right';CTX.textBaseline='top';
+      CTX.fillStyle='rgba(80,80,80,.4)';
+      CTX.fillText('🔒',p.x+rw-3,p.y+3);
+    }
+  });
+}
+
+function drawGhost(){
+  var p=w2c(_placing.x,_placing.y);
+  var rw=_placing.w*ST.sc,rh=_placing.d*ST.sc;
+  CTX.save();
+  CTX.globalAlpha=0.55;
+  CTX.fillStyle=_placing.color||'#B5E4FF';
+  roundRect(p.x,p.y,rw,rh,6);CTX.fill();
+  CTX.globalAlpha=1;
+  CTX.strokeStyle='#0E5EA8';CTX.lineWidth=2;CTX.setLineDash([6,4]);
+  roundRect(p.x,p.y,rw,rh,6);CTX.stroke();
+  CTX.setLineDash([]);
+  // label
+  CTX.fillStyle='#0E5EA8';
+  var fs=Math.max(10,Math.min(15,rw/6));
+  CTX.font='bold '+fs+'px sans-serif';
+  CTX.textAlign='center';CTX.textBaseline='middle';
+  CTX.fillText(_placing.ico+' '+_placing.name,p.x+rw/2,p.y+rh/2-(rh>60?8:0));
+  if(rh>60){
+    CTX.font=(fs*0.75)+'px sans-serif';
+    CTX.fillText(_placing.w+'×'+_placing.d+'mm',p.x+rw/2,p.y+rh/2+fs*0.9);
+  }
+  CTX.restore();
+}
+
+function roundRect(x,y,w,h,r){
+  CTX.beginPath();
+  CTX.moveTo(x+r,y);CTX.lineTo(x+w-r,y);CTX.arcTo(x+w,y,x+w,y+r,r);
+  CTX.lineTo(x+w,y+h-r);CTX.arcTo(x+w,y+h,x+w-r,y+h,r);
+  CTX.lineTo(x+r,y+h);CTX.arcTo(x,y+h,x,y+h-r,r);
+  CTX.lineTo(x,y+r);CTX.arcTo(x,y,x+r,y,r);CTX.closePath();
+}
+function w2c(wx,wy){return{x:(wx+ST.vx)*ST.sc,y:(wy+ST.vy)*ST.sc};}
+
+// ===== CLOUD SAVE =====
+async function saveProj(){
+  if(!_user){showToast('⚠️ ログイン必要');return;}
+  try{
+    await fb().setDoc(fb().doc(fb().db,'projects',_user.uid),{rooms:ST.rooms,mod:ST.mod,uid:_user.uid,updatedAt:fb().serverTimestamp()});
+    showToast('☁️ 保存しました');
+  }catch(ex){showToast('⚠️ 保存失敗');}
+}
+
+// ===== TOAST =====
+var _tTimer=null;
+function showToast(msg){
+  var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(_tTimer);_tTimer=setTimeout(function(){el.classList.remove('show');},2200);
+}
+</script>
+</body>
+</html>
